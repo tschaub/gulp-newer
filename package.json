@@ -1,0 +1,45 @@
+{
+  "name": "gulp-newer",
+  "version": "0.0.0",
+  "description": "Only pass through newer source files",
+  "homepage": "https://github.com/tschaub/gulp-newer",
+  "author": {
+    "name": "Tim Schaub",
+    "url": "http://tschaub.net/"
+  },
+  "keywords": [
+    "gulp",
+    "gulpplugin",
+    "newer",
+    "mtime"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/tschaub/gulp-newer.git"
+  },
+  "bugs": {
+    "url": "https://github.com/tschaub/gulp-newer/issues"
+  },
+  "licenses": [
+    {
+      "type": "MIT",
+      "url": "http://tschaub.mit-license.org/"
+    }
+  ],
+  "main": "index.js",
+  "scripts": {
+    "test": "node tasks.js lint test"
+  },
+  "devDependencies": {
+    "jshint": "~2.4.1",
+    "mocha": "~1.17.0",
+    "gulp": "~3.3.4",
+    "chai": "~1.8.1",
+    "mock-fs": "~2.1.1"
+  },
+  "dependencies": {
+    "kew": "~0.3.1",
+    "glob": "~3.2.8",
+    "gulp-util": "~2.2.10"
+  }
+}

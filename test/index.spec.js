@@ -1,0 +1,274 @@
+var Transform = require('stream').Transform;
+var fs = require('fs');
+var path = require('path');
+
+var chai = require('chai');
+var gutil = require('gulp-util');
+var mock = require('mock-fs');
+
+var newer = require('../index');
+
+
+/** @type {boolean} */
+chai.Assertion.includeStack = true;
+
+var File = gutil.File;
+var assert = chai.assert;
+
+
+/**
+ * Test utility function.  Create File instances for each of the provided paths
+ * and write to the provided stream.  Call stream.end() when done.
+ * @param {stream.Transform} stream Transform stream.
+ * @param {Array.<string>} paths Array of file paths.
+ */
+function write(stream, paths) {
+  paths.forEach(function(filePath) {
+    stream.write(new File({
+      contents: fs.readFileSync(filePath),
+      path: path.resolve(filePath),
+      stat: fs.statSync(filePath)
+    }));
+  });
+  stream.end();
+}
+
+describe('newer()', function() {
+
+  it('creates a transform stream', function() {
+    var stream = newer('foo');
+    assert.instanceOf(stream, Transform);
+  });
+
+  it('requires a string dest', function() {
+
+    assert.throws(function() {
+      newer();
+    });
+
+    assert.throws(function() {
+      newer(123);
+    });
+
+    assert.throws(function() {
+      newer({foo: 'bar'});
+    });
+
+  });
+
+  describe('dest dir that does not exist', function() {
+
+    beforeEach(function() {
+      mock({
+        source1: 'source1 content',
+        source2: 'source2 content',
+        source3: 'source3 content'
+      });
+    });
+    afterEach(mock.restore);
+
+    it('passes through all files', function(done) {
+      var stream = newer('new/dir');
+
+      var paths = ['source1', 'source2', 'source3'];
+
+      var calls = 0;
+      stream.on('data', function(file) {
+        assert.equal(file.path, path.resolve(paths[calls]));
+        ++calls;
+      });
+
+      stream.on('error', done);
+
+      stream.on('end', function() {
+        assert.equal(calls, paths.length);
+        done();
+      });
+
+      write(stream, paths);
+    });
+
+  });
+
+  describe('empty dest dir', function() {
+
+    beforeEach(function() {
+      mock({
+        source1: 'source1 content',
+        source2: 'source2 content',
+        source3: 'source3 content',
+        dest: {}
+      });
+    });
+    afterEach(mock.restore);
+
+    it('passes through all files', function(done) {
+      var stream = newer('dest');
+
+      var paths = ['source1', 'source2', 'source3'];
+
+      var calls = 0;
+      stream.on('data', function(file) {
+        assert.equal(file.path, path.resolve(paths[calls]));
+        ++calls;
+      });
+
+      stream.on('error', done);
+
+      stream.on('end', function() {
+        assert.equal(calls, paths.length);
+        done();
+      });
+
+      write(stream, paths);
+    });
+
+  });
+
+  describe('dest dir with one older file', function() {
+
+    beforeEach(function() {
+      mock({
+        file1: 'file1 content',
+        file2: 'file2 content',
+        file3: 'file3 content',
+        dest: {
+          file2: mock.file({
+            content: 'file2 content',
+            mtime: new Date(1)
+          })
+        }
+      });
+    });
+    afterEach(mock.restore);
+
+    it('passes through all files', function(done) {
+      var stream = newer('dest');
+
+      var paths = ['file1', 'file2', 'file3'];
+
+      var calls = 0;
+      stream.on('data', function(file) {
+        assert.equal(file.path, path.resolve(paths[calls]));
+        ++calls;
+      });
+
+      stream.on('error', done);
+
+      stream.on('end', function() {
+        assert.equal(calls, paths.length);
+        done();
+      });
+
+      write(stream, paths);
+    });
+
+  });
+
+  describe('dest dir with one newer file', function() {
+
+    beforeEach(function() {
+      mock({
+        file1: mock.file({
+          content: 'file1 content',
+          mtime: new Date(100)
+        }),
+        file2: mock.file({
+          content: 'file2 content',
+          mtime: new Date(100)
+        }),
+        file3: mock.file({
+          content: 'file3 content',
+          mtime: new Date(100)
+        }),
+        dest: {
+          file2: mock.file({
+            content: 'file2 content',
+            mtime: new Date(200)
+          })
+        }
+      });
+    });
+    afterEach(mock.restore);
+
+    it('passes through two newer files', function(done) {
+      var stream = newer('dest');
+
+      var paths = ['file1', 'file2', 'file3'];
+
+      var calls = 0;
+      stream.on('data', function(file) {
+        assert.notEqual(file.path, path.resolve('file2'));
+        ++calls;
+      });
+
+      stream.on('error', done);
+
+      stream.on('end', function() {
+        assert.equal(calls, paths.length - 1);
+        done();
+      });
+
+      write(stream, paths);
+    });
+
+  });
+
+  describe('dest dir with two newer and one older file', function() {
+
+    beforeEach(function() {
+      mock({
+        file1: mock.file({
+          content: 'file1 content',
+          mtime: new Date(100)
+        }),
+        file2: mock.file({
+          content: 'file2 content',
+          mtime: new Date(100)
+        }),
+        file3: mock.file({
+          content: 'file3 content',
+          mtime: new Date(100)
+        }),
+        dest: {
+          file1: mock.file({
+            content: 'file1 content',
+            mtime: new Date(150)
+          }),
+          file2: mock.file({
+            content: 'file2 content',
+            mtime: new Date(50)
+          }),
+          file3: mock.file({
+            content: 'file3 content',
+            mtime: new Date(150)
+          })
+        }
+      });
+    });
+    afterEach(mock.restore);
+
+    it('passes through one newer file', function(done) {
+      var stream = newer('dest');
+
+      var paths = ['file1', 'file2', 'file3'];
+
+      var calls = 0;
+      stream.on('data', function(file) {
+        assert.equal(file.path, path.resolve('file2'));
+        ++calls;
+      });
+
+      stream.on('error', done);
+
+      stream.on('end', function() {
+        assert.equal(calls, 1);
+        done();
+      });
+
+      write(stream, paths);
+    });
+
+  });
+
+});
