@@ -38,3 +38,5 @@ gulp.task('default', function() {
 
 });
 ```
+
+[![Current Status](https://secure.travis-ci.org/tschaub/gulp-newer.png?branch=master)](https://travis-ci.org/tschaub/gulp-newer)
