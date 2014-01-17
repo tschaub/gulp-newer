@@ -6,7 +6,7 @@ var chai = require('chai');
 var gutil = require('gulp-util');
 var mock = require('mock-fs');
 
-var newer = require('../index');
+var newer = require('./index.js');
 
 
 /** @type {boolean} */

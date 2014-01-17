@@ -1,15 +1,15 @@
 var path = require('path');
 
 var jshint = require('jshint/src/cli').run;
-var glob = require('glob');
 var Mocha = require('mocha');
+
 
 /**
  * Run the linter.
  * @param {function(Error)} done Callback.
  */
 exports.lint = function(done) {
-  var args = ['index.js', 'tasks.js', 'test'];
+  var args = ['index.js', 'tasks.js', 'spec.js'];
   var passed = jshint({args: args});
   process.nextTick(function() {
     done(passed ? null : new Error('JSHint failed'));
@@ -25,9 +25,7 @@ exports.test = function(done) {
   var mocha = new Mocha();
   mocha.reporter('spec');
   mocha.ui('bdd');
-  mocha.files = glob.sync('test/**/*.spec.js').map(function(file) {
-    return path.resolve(file);
-  });
+  mocha.files = [path.resolve('spec.js')];
   mocha.run(function(failures) {
     done(failures ? new Error('Mocha failures') : null);
   });
