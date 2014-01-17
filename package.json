@@ -39,7 +39,6 @@
   },
   "dependencies": {
     "kew": "~0.3.1",
-    "glob": "~3.2.8",
     "gulp-util": "~2.2.10"
   }
 }
