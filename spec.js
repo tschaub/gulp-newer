@@ -479,7 +479,7 @@ describe('newer()', function() {
     });
     afterEach(mock.restore);
 
-    it('passes through all source files', function(done) {
+    it('passes through no source files', function(done) {
       var stream = newer('dest/output');
 
       var paths = ['file1', 'file2', 'file3'];
