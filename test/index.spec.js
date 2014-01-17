@@ -90,6 +90,41 @@ describe('newer()', function() {
 
   });
 
+  describe('dest file that does not exist', function() {
+
+    beforeEach(function() {
+      mock({
+        file1: 'file1 content',
+        file2: 'file2 content',
+        file3: 'file3 content',
+        dest: {}
+      });
+    });
+    afterEach(mock.restore);
+
+    it('passes through all files', function(done) {
+      var stream = newer('dest/concat');
+
+      var paths = ['file1', 'file2', 'file3'];
+
+      var calls = 0;
+      stream.on('data', function(file) {
+        assert.equal(file.path, path.resolve(paths[calls]));
+        ++calls;
+      });
+
+      stream.on('error', done);
+
+      stream.on('end', function() {
+        assert.equal(calls, paths.length);
+        done();
+      });
+
+      write(stream, paths);
+    });
+
+  });
+
   describe('empty dest dir', function() {
 
     beforeEach(function() {
@@ -263,6 +298,202 @@ describe('newer()', function() {
 
       stream.on('end', function() {
         assert.equal(calls, 1);
+        done();
+      });
+
+      write(stream, paths);
+    });
+
+  });
+
+  describe('dest file with first source file newer', function() {
+
+    beforeEach(function() {
+      mock({
+        file1: mock.file({
+          content: 'file1 content',
+          mtime: new Date(200)
+        }),
+        file2: mock.file({
+          content: 'file2 content',
+          mtime: new Date(100)
+        }),
+        file3: mock.file({
+          content: 'file3 content',
+          mtime: new Date(100)
+        }),
+        dest: {
+          output: mock.file({
+            content: 'file2 content',
+            mtime: new Date(150)
+          })
+        }
+      });
+    });
+    afterEach(mock.restore);
+
+    it('passes through all source files', function(done) {
+      var stream = newer('dest/output');
+
+      var paths = ['file1', 'file2', 'file3'];
+
+      var calls = 0;
+      stream.on('data', function(file) {
+        assert.equal(file.path, path.resolve(paths[calls]));
+        ++calls;
+      });
+
+      stream.on('error', done);
+
+      stream.on('end', function() {
+        assert.equal(calls, paths.length);
+        done();
+      });
+
+      write(stream, paths);
+    });
+
+  });
+
+  describe('dest file with second source file newer', function() {
+
+    beforeEach(function() {
+      mock({
+        file1: mock.file({
+          content: 'file1 content',
+          mtime: new Date(100)
+        }),
+        file2: mock.file({
+          content: 'file2 content',
+          mtime: new Date(200)
+        }),
+        file3: mock.file({
+          content: 'file3 content',
+          mtime: new Date(100)
+        }),
+        dest: {
+          output: mock.file({
+            content: 'file2 content',
+            mtime: new Date(150)
+          })
+        }
+      });
+    });
+    afterEach(mock.restore);
+
+    it('passes through all source files', function(done) {
+      var stream = newer('dest/output');
+
+      var paths = ['file1', 'file2', 'file3'];
+
+      var calls = 0;
+      stream.on('data', function(file) {
+        assert.equal(file.path, path.resolve(paths[calls]));
+        ++calls;
+      });
+
+      stream.on('error', done);
+
+      stream.on('end', function() {
+        assert.equal(calls, paths.length);
+        done();
+      });
+
+      write(stream, paths);
+    });
+
+  });
+
+  describe('dest file with last source file newer', function() {
+
+    beforeEach(function() {
+      mock({
+        file1: mock.file({
+          content: 'file1 content',
+          mtime: new Date(100)
+        }),
+        file2: mock.file({
+          content: 'file2 content',
+          mtime: new Date(100)
+        }),
+        file3: mock.file({
+          content: 'file3 content',
+          mtime: new Date(200)
+        }),
+        dest: {
+          output: mock.file({
+            content: 'file2 content',
+            mtime: new Date(150)
+          })
+        }
+      });
+    });
+    afterEach(mock.restore);
+
+    it('passes through all source files', function(done) {
+      var stream = newer('dest/output');
+
+      var paths = ['file1', 'file2', 'file3'];
+
+      var calls = 0;
+      stream.on('data', function(file) {
+        assert.equal(file.path, path.resolve(paths[calls]));
+        ++calls;
+      });
+
+      stream.on('error', done);
+
+      stream.on('end', function() {
+        assert.equal(calls, paths.length);
+        done();
+      });
+
+      write(stream, paths);
+    });
+
+  });
+
+  describe('dest file with no newer source files', function() {
+
+    beforeEach(function() {
+      mock({
+        file1: mock.file({
+          content: 'file1 content',
+          mtime: new Date(100)
+        }),
+        file2: mock.file({
+          content: 'file2 content',
+          mtime: new Date(100)
+        }),
+        file3: mock.file({
+          content: 'file3 content',
+          mtime: new Date(100)
+        }),
+        dest: {
+          output: mock.file({
+            content: 'file2 content',
+            mtime: new Date(150)
+          })
+        }
+      });
+    });
+    afterEach(mock.restore);
+
+    it('passes through all source files', function(done) {
+      var stream = newer('dest/output');
+
+      var paths = ['file1', 'file2', 'file3'];
+
+      var calls = 0;
+      stream.on('data', function(file) {
+        done(new Error('Expected no source files'));
+        ++calls;
+      });
+
+      stream.on('error', done);
+
+      stream.on('end', function() {
+        assert.equal(calls, 0);
         done();
       });
 

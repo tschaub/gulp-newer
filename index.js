@@ -63,7 +63,9 @@ Newer.prototype._transform = function(srcFile, encoding, done) {
       return Q.nfcall(fs.stat, path.join(self._dest, srcFile.relative));
     } else {
       // wait to see if any are newer, then pass through all
-      self._bufferedFiles = [];
+      if (!self._bufferedFiles) {
+        self._bufferedFiles = [];
+      }
       return Q.resolve(destStats);
     }
   }).fail(function(err) {
@@ -101,15 +103,11 @@ Newer.prototype._transform = function(srcFile, encoding, done) {
 
 
 /**
- * Flush out any remaining buffered files.
+ * Remove references to buffered files.
  * @param {function(Error)} done Callback.
  */
 Newer.prototype._flush = function(done) {
-  if (this._bufferedFiles) {
-    this._bufferedFiles.forEach(function(file) {
-      this.push(file);
-    }, this);
-  }
+  this._bufferedFiles = null;
   done();
 };
 
