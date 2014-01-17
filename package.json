@@ -1,6 +1,6 @@
 {
   "name": "gulp-newer",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "Only pass through newer source files",
   "homepage": "https://github.com/tschaub/gulp-newer",
   "author": {
