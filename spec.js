@@ -40,7 +40,7 @@ describe('newer()', function() {
     assert.instanceOf(stream, Transform);
   });
 
-  it('requires a string dest', function() {
+  it('requires a string dest or an object with the dest property', function() {
 
     assert.throws(function() {
       newer();
@@ -51,20 +51,20 @@ describe('newer()', function() {
     });
 
     assert.throws(function() {
-      newer({foo: 'bar'});
+      newer({});
     });
   });
 
-  describe('dest file suffix', function() {
+  describe('config.suffix', function() {
     
     it('must be a string', function() {
       
       assert.throws(function() {
-        newer('foo', 1);
+        newer({dest: 'foo', suffix: 1});
       });
 
       assert.throws(function() {
-        newer('foo', {foo: 'bar'});
+        newer({dest: 'foo', suffix: {}});
       });
     });
   });
@@ -515,7 +515,7 @@ describe('newer()', function() {
 
   });
 
-  describe('dest dir with dest file suffix and two files', function() {
+  describe('dest file suffix and two files', function() {
 
     beforeEach(function() {
       mock({
@@ -542,7 +542,7 @@ describe('newer()', function() {
     afterEach(mock.restore);
 
     it('passes through one newer file', function(done) {
-      var stream = newer('dest', '.anothersuffix');
+      var stream = newer({dest: 'dest', suffix: '.anothersuffix'});
 
       var paths = ['file1.somesuffix', 'file2.somesuffix'];
 
