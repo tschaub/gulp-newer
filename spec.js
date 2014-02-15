@@ -55,16 +55,16 @@ describe('newer()', function() {
     });
   });
 
-  describe('config.suffix', function() {
+  describe('config.ext', function() {
     
     it('must be a string', function() {
       
       assert.throws(function() {
-        newer({dest: 'foo', suffix: 1});
+        newer({dest: 'foo', ext: 1});
       });
 
       assert.throws(function() {
-        newer({dest: 'foo', suffix: {}});
+        newer({dest: 'foo', ext: {}});
       });
     });
   });
@@ -515,24 +515,24 @@ describe('newer()', function() {
 
   });
 
-  describe('dest file suffix and two files', function() {
+  describe('dest file ext and two files', function() {
 
     beforeEach(function() {
       mock({
-        'file1.somesuffix': mock.file({
+        'file1.ext1': mock.file({
           content: 'file1 content',
           mtime: new Date(100)
         }),
-        'file2.somesuffix': mock.file({
+        'file2.ext1': mock.file({
           content: 'file2 content',
           mtime: new Date(100)
         }),
         dest: {
-          'file1.anothersuffix': mock.file({
+          'file1.ext2': mock.file({
             content: 'file1 content',
             mtime: new Date(100)
           }),
-          'file2.anothersuffix': mock.file({
+          'file2.ext2': mock.file({
             content: 'file2 content',
             mtime: new Date(50)
           })
@@ -542,13 +542,13 @@ describe('newer()', function() {
     afterEach(mock.restore);
 
     it('passes through one newer file', function(done) {
-      var stream = newer({dest: 'dest', suffix: '.anothersuffix'});
+      var stream = newer({dest: 'dest', ext: '.ext2'});
 
-      var paths = ['file1.somesuffix', 'file2.somesuffix'];
+      var paths = ['file1.ext1', 'file2.ext1'];
 
       var calls = 0;
       stream.on('data', function(file) {
-        assert.equal(file.path, path.resolve('file2.somesuffix'));
+        assert.equal(file.path, path.resolve('file2.ext1'));
         ++calls;
       });
 
