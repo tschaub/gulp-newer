@@ -2,26 +2,42 @@ var Transform = require('stream').Transform;
 var fs = require('fs');
 var path = require('path');
 var util = require('util');
+var _ = require('lodash');
 
 var Q = require('kew');
 var gutil = require('gulp-util');
 
 var PluginError = gutil.PluginError;
 
-function Newer(dest) {
-  if (typeof dest !== 'string') {
-    throw new PluginError('gulp-newer', 'Requires a dest string');
+function Newer(options) {
+  if (_.isString(options)) {
+    this._dest = options;
+
+  } else if (_.isPlainObject(options)) {
+
+    if (_.isString(options.dest)) {
+      this._dest = options.dest;
+    } else {
+      throw new PluginError('Dest must be a string');
+    }
+
+    if (options.suffix) {
+      if (!_.isString(options.suffix)) {
+        throw new PluginError('gulp-newer', 'File suffix must be a string');
+      }
+      this._suffix = options.suffix;
+    }
+
+  } else {
+    throw new PluginError('gulp-newer', 'Requires a dest string or an object');
   }
   Transform.call(this, {objectMode: true});
-
-  /** @type {string} */
-  this._dest = dest;
 
   /**
    * Promise for the dest file/directory stats.
    * @type {[type]}
    */
-  this._destStats = Q.nfcall(fs.stat, dest);
+  this._destStats = Q.nfcall(fs.stat, this._dest);
 
   /**
    * If the provided dest is a file, we want to pass through all files if any
@@ -56,11 +72,13 @@ Newer.prototype._transform = function(srcFile, encoding, done) {
     return;
   }
   var self = this;
-
   this._destStats.then(function(destStats) {
-    if (destStats.isDirectory()) {
+    if (destStats.isDirectory() || self._suffix) {
       // stat dest/relative file
-      return Q.nfcall(fs.stat, path.join(self._dest, srcFile.relative));
+      var destFileRelative = self._suffix ?
+          srcFile.relative.split('.')[0] + self._suffix :
+          srcFile.relative;
+      return Q.nfcall(fs.stat, path.join(self._dest, destFileRelative));
     } else {
       // wait to see if any are newer, then pass through all
       if (!self._bufferedFiles) {
@@ -117,6 +135,6 @@ Newer.prototype._flush = function(done) {
  * @param {string} dest Path to destination directory or file.
  * @return {Newer} A transform stream.
  */
-module.exports = function(dest) {
-  return new Newer(dest);
+module.exports = function(options) {
+  return new Newer(options);
 };

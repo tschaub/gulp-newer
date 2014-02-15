@@ -40,7 +40,7 @@ describe('newer()', function() {
     assert.instanceOf(stream, Transform);
   });
 
-  it('requires a string dest', function() {
+  it('requires a string dest or an object with the dest property', function() {
 
     assert.throws(function() {
       newer();
@@ -51,9 +51,22 @@ describe('newer()', function() {
     });
 
     assert.throws(function() {
-      newer({foo: 'bar'});
+      newer({});
     });
+  });
 
+  describe('config.suffix', function() {
+    
+    it('must be a string', function() {
+      
+      assert.throws(function() {
+        newer({dest: 'foo', suffix: 1});
+      });
+
+      assert.throws(function() {
+        newer({dest: 'foo', suffix: {}});
+      });
+    });
   });
 
   describe('dest dir that does not exist', function() {
@@ -494,6 +507,55 @@ describe('newer()', function() {
 
       stream.on('end', function() {
         assert.equal(calls, 0);
+        done();
+      });
+
+      write(stream, paths);
+    });
+
+  });
+
+  describe('dest file suffix and two files', function() {
+
+    beforeEach(function() {
+      mock({
+        'file1.somesuffix': mock.file({
+          content: 'file1 content',
+          mtime: new Date(100)
+        }),
+        'file2.somesuffix': mock.file({
+          content: 'file2 content',
+          mtime: new Date(100)
+        }),
+        dest: {
+          'file1.anothersuffix': mock.file({
+            content: 'file1 content',
+            mtime: new Date(100)
+          }),
+          'file2.anothersuffix': mock.file({
+            content: 'file2 content',
+            mtime: new Date(50)
+          })
+        }
+      });
+    });
+    afterEach(mock.restore);
+
+    it('passes through one newer file', function(done) {
+      var stream = newer({dest: 'dest', suffix: '.anothersuffix'});
+
+      var paths = ['file1.somesuffix', 'file2.somesuffix'];
+
+      var calls = 0;
+      stream.on('data', function(file) {
+        assert.equal(file.path, path.resolve('file2.somesuffix'));
+        ++calls;
+      });
+
+      stream.on('error', done);
+
+      stream.on('end', function() {
+        assert.equal(calls, 1);
         done();
       });
 

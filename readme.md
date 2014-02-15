@@ -65,8 +65,12 @@ gulp.task('concat', function() {
 ## API
 
 ### `newer(dest)`
+* **dest** - `string` Path to destination directory or file.
 
- * **dest** - `string` Path to destination directory or file.
+### `newer(options)`
+
+ * **options.dest** - `string` As above, *required*.
+ * **options.suffix** - `string` Source files will be matched to destination files with the suffix.
 
 Create a [transform stream](http://nodejs.org/api/stream.html#stream_class_stream_transform_1) that passes through files whose modification time is more recent than the corresponding destination file's modification time.
 
