@@ -8,9 +8,15 @@ var gutil = require('gulp-util');
 
 var PluginError = gutil.PluginError;
 
-function Newer(dest) {
+function Newer(dest, destFileSuffix) {
   if (typeof dest !== 'string') {
     throw new PluginError('gulp-newer', 'Requires a dest string');
+  }
+  if (destFileSuffix) {
+    if (typeof destFileSuffix !== 'string') {
+      throw new PluginError('gulp-newer', 'Dest file suffix must be a string');
+    }
+    this._destFileSuffix = destFileSuffix;
   }
   Transform.call(this, {objectMode: true});
 
@@ -56,11 +62,11 @@ Newer.prototype._transform = function(srcFile, encoding, done) {
     return;
   }
   var self = this;
-
   this._destStats.then(function(destStats) {
-    if (destStats.isDirectory()) {
+    if (destStats.isDirectory() || self._destFileSuffix) {
       // stat dest/relative file
-      return Q.nfcall(fs.stat, path.join(self._dest, srcFile.relative));
+      var destFileRelative = self._destFileSuffix ? srcFile.relative.split('.')[0] + self._destFileSuffix : srcFile.relative;
+      return Q.nfcall(fs.stat, path.join(self._dest, destFileRelative));
     } else {
       // wait to see if any are newer, then pass through all
       if (!self._bufferedFiles) {
@@ -117,6 +123,6 @@ Newer.prototype._flush = function(done) {
  * @param {string} dest Path to destination directory or file.
  * @return {Newer} A transform stream.
  */
-module.exports = function(dest) {
-  return new Newer(dest);
+module.exports = function(dest, destFileSuffix) {
+  return new Newer(dest, destFileSuffix);
 };

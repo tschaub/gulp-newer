@@ -64,13 +64,15 @@ gulp.task('concat', function() {
 
 ## API
 
-### `newer(dest)`
+### `newer(dest, destFileSuffix)`
 
  * **dest** - `string` Path to destination directory or file.
+ * **destFileSuffix (optional)** - `string` Suffix for destination files when **dest** is a directory.
 
 Create a [transform stream](http://nodejs.org/api/stream.html#stream_class_stream_transform_1) that passes through files whose modification time is more recent than the corresponding destination file's modification time.
 
 If `dest` is a directory path, the `newer` stream will check for files in the destination directory with the same relative path as source files.  Source files that have been modified more recently than the resolved destination file will be passed through.  If the `dest` directory or resolved destination file does not exist, all source files will be passed through.
+If `destFileSuffix` is specified, source files will be matched to destination files with the specified suffix.
 
 If `dest` is a file path, the `newer` stream will pass through *all* files if *any one* of them has been modified more recently than the destination file.  If the `dest` file does not exist, all source files will be passed through.
 
