@@ -79,9 +79,10 @@ Newer.prototype._transform = function(srcFile, encoding, done) {
   this._destStats.then(function(destStats) {
     if (destStats.isDirectory() || self._ext) {
       // stat dest/relative file
+      var relative = srcFile.relative;
       var destFileRelative = self._ext ?
-          srcFile.relative.replace(/\.([^\./].*?|)$/, self._ext) :
-          srcFile.relative;
+          relative.substr(0, relative.length - path.extname(relative).length) + self._ext :
+          relative;
       return Q.nfcall(fs.stat, path.join(self._dest, destFileRelative));
     } else {
       // wait to see if any are newer, then pass through all
