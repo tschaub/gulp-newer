@@ -25,6 +25,10 @@ function Newer(options) {
     throw new PluginError('Requires ext to be a string');
   }
 
+  if (options.suffix && typeof options.suffix !== 'string') {
+    throw new PluginError('Requires suffix to be a string');
+  }
+
   /**
    * Path to destination directory or file.
    * @type {string}
@@ -36,6 +40,12 @@ function Newer(options) {
    * @type {string}
    */
   this._ext = options.ext;
+
+  /**
+   * Optional suffix for destination files.
+   * @type {string}
+   */
+  this._suffix = options.suffix;
 
   /**
    * Promise for the dest file/directory stats.
@@ -83,6 +93,9 @@ Newer.prototype._transform = function(srcFile, encoding, done) {
       var destFileRelative = self._ext ?
           relative.substr(0, relative.length - path.extname(relative).length) + self._ext :
           relative;
+      if (self._suffix) {
+        destFileRelative += self._suffix;
+      }
       return Q.nfcall(fs.stat, path.join(self._dest, destFileRelative));
     } else {
       // wait to see if any are newer, then pass through all
