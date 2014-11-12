@@ -80,7 +80,7 @@ Newer.prototype._transform = function(srcFile, encoding, done) {
     if (destStats.isDirectory() || self._ext) {
       // stat dest/relative file
       var destFileRelative = self._ext ?
-          srcFile.relative.replace(/\..*?$/, self._ext) :
+          srcFile.relative.replace(/\.([^\./].*?|)$/, self._ext) :
           srcFile.relative;
       return Q.nfcall(fs.stat, path.join(self._dest, destFileRelative));
     } else {
