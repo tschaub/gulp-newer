@@ -56,15 +56,29 @@ describe('newer()', function() {
   });
 
   describe('config.ext', function() {
-    
+
     it('must be a string', function() {
-      
+
       assert.throws(function() {
         newer({dest: 'foo', ext: 1});
       });
 
       assert.throws(function() {
         newer({dest: 'foo', ext: {}});
+      });
+    });
+  });
+
+  describe('config.map', function() {
+
+    it('must be a function', function() {
+
+      assert.throws(function() {
+        newer({dest: 'foo', map: 1});
+      });
+
+      assert.throws(function() {
+        newer({dest: 'foo', map: 'bar'});
       });
     });
   });
@@ -543,6 +557,60 @@ describe('newer()', function() {
 
     it('passes through one newer file', function(done) {
       var stream = newer({dest: 'dest', ext: '.ext2'});
+
+      var paths = ['file1.ext1', 'file2.ext1'];
+
+      var calls = 0;
+      stream.on('data', function(file) {
+        assert.equal(file.path, path.resolve('file2.ext1'));
+        ++calls;
+      });
+
+      stream.on('error', done);
+
+      stream.on('end', function() {
+        assert.equal(calls, 1);
+        done();
+      });
+
+      write(stream, paths);
+    });
+
+  });
+
+  describe('custom mapping between source and dest', function() {
+
+    beforeEach(function() {
+      mock({
+        'file1.ext1': mock.file({
+          content: 'file1 content',
+          mtime: new Date(100)
+        }),
+        'file2.ext1': mock.file({
+          content: 'file2 content',
+          mtime: new Date(100)
+        }),
+        dest: {
+          'file1.ext2': mock.file({
+            content: 'file1 content',
+            mtime: new Date(100)
+          }),
+          'file2.ext2': mock.file({
+            content: 'file2 content',
+            mtime: new Date(50)
+          })
+        }
+      });
+    });
+    afterEach(mock.restore);
+
+    it('passes through one newer file', function(done) {
+      var stream = newer({
+        dest: 'dest',
+        map: function(destPath) {
+          return destPath.replace('.ext1', '.ext2');
+        }
+      });
 
       var paths = ['file1.ext1', 'file2.ext1'];
 
