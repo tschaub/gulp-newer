@@ -25,6 +25,10 @@ function Newer(options) {
     throw new PluginError('Requires ext to be a string');
   }
 
+  if (options.map && typeof options.map !== 'function') {
+    throw new PluginError('Requires map to be a function');
+  }
+
   /**
    * Path to destination directory or file.
    * @type {string}
@@ -36,6 +40,12 @@ function Newer(options) {
    * @type {string}
    */
   this._ext = options.ext;
+
+  /**
+   * Optional function for mapping relative source files to destination files.
+   * @type {function}
+   */
+  this._map = options.map;
 
   /**
    * Promise for the dest file/directory stats.
@@ -77,13 +87,16 @@ Newer.prototype._transform = function(srcFile, encoding, done) {
   }
   var self = this;
   this._destStats.then(function(destStats) {
-    if (destStats.isDirectory() || self._ext) {
+    if (destStats.isDirectory() || self._ext || self._map) {
       // stat dest/relative file
       var relative = srcFile.relative;
       var ext = path.extname(relative);
       var destFileRelative = self._ext ?
           relative.substr(0, relative.length - ext.length) + self._ext :
           relative;
+      if (self._map) {
+        destFileRelative = self._map(destFileRelative);
+      }
       return Q.nfcall(fs.stat, path.join(self._dest, destFileRelative));
     } else {
       // wait to see if any are newer, then pass through all
