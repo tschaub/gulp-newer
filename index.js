@@ -43,7 +43,7 @@ function Newer(options) {
 
   /**
    * Optional function for mapping relative source files to destination files.
-   * @type {function}
+   * @type {function(string): string}
    */
   this._map = options.map;
 
