@@ -7,7 +7,6 @@
   "nonew": true,
   "quotmark": "single",
   "undef": true,
-  "trailing": true,
   "maxlen": 80,
   "globals": {
     "Buffer": false,
