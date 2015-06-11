@@ -20,12 +20,7 @@
   "bugs": {
     "url": "https://github.com/tschaub/gulp-newer/issues"
   },
-  "licenses": [
-    {
-      "type": "MIT",
-      "url": "http://tschaub.mit-license.org/"
-    }
-  ],
+  "license": "MIT",
   "main": "index.js",
   "scripts": {
     "test": "node tasks.js lint test"
