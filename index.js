@@ -134,7 +134,7 @@ Newer.prototype._transform = function(srcFile, encoding, done) {
       self.push(srcFile);
     }
     done();
-  }, done);
+  }).fail(done).end();
 
 };
 
