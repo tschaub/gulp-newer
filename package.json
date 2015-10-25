@@ -26,7 +26,7 @@
     "test": "node tasks.js lint test"
   },
   "devDependencies": {
-    "chai": "~1.10.0",
+    "chai": "^3.4.0",
     "gulp": "~3.8.10",
     "jshint": "~2.5.10",
     "mocha": "~2.0.1",
