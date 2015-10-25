@@ -629,6 +629,33 @@ describe('newer()', function() {
 
       write(stream, paths);
     });
+  });
+
+  describe('reports errors', function() {
+    beforeEach(function() {
+      mock({
+        'q': mock.file({
+          mtime: new Date(100)
+        }),
+        dest: {}
+      });
+    });
+    afterEach(mock.restore);
+
+    it('in "data" handlers', function(done) {
+      var stream = newer('dest');
+
+      var err = new Error('test');
+
+      stream.on('data', function () { throw err; });
+
+      stream.on('error', function (caught) {
+        assert.equal(caught, err);
+        done();
+      });
+
+      write(stream, ['q']);
+    });
 
   });
 
