@@ -29,7 +29,7 @@
     "chai": "^3.4.0",
     "gulp": "~3.8.10",
     "jshint": "~2.5.10",
-    "mocha": "~2.0.1",
+    "mocha": "^2.3.3",
     "mock-fs": "^3.4.0"
   },
   "dependencies": {
