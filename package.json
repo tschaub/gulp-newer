@@ -37,6 +37,6 @@
   },
   "dependencies": {
     "kew": "^0.7.0",
-    "gulp-util": "~3.0.1"
+    "gulp-util": "^3.0.7"
   }
 }
