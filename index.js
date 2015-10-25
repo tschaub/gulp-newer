@@ -154,7 +154,7 @@ Newer.prototype._flush = function(done) {
 
 /**
  * Only pass through source files that are newer than the provided destination.
- * @param {string} dest Path to destination directory or file.
+ * @param {Object} options An options object or path to destination.
  * @return {Newer} A transform stream.
  */
 module.exports = function(options) {
