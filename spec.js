@@ -1,3 +1,5 @@
+/* eslint-env mocha */
+
 var Transform = require('stream').Transform;
 var fs = require('fs');
 var path = require('path');
@@ -8,13 +10,10 @@ var mock = require('mock-fs');
 
 var newer = require('./index.js');
 
-
-/** @type {boolean} */
-chai.Assertion.includeStack = true;
+chai.config.includeStack = true;
 
 var File = gutil.File;
 var assert = chai.assert;
-
 
 /**
  * Test utility function.  Create File instances for each of the provided paths
@@ -647,9 +646,11 @@ describe('newer()', function() {
 
       var err = new Error('test');
 
-      stream.on('data', function () { throw err; });
+      stream.on('data', function() {
+        throw err;
+      });
 
-      stream.on('error', function (caught) {
+      stream.on('error', function(caught) {
         assert.equal(caught, err);
         done();
       });
