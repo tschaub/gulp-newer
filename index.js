@@ -8,25 +8,28 @@ var gutil = require('gulp-util');
 
 var PluginError = gutil.PluginError;
 
+var PLUGIN_NAME = 'gulp-newer';
+
 function Newer(options) {
   Transform.call(this, {objectMode: true});
 
   if (!options) {
-    throw new PluginError('Requires a dest string or options object');
+    throw new PluginError(PLUGIN_NAME,
+      'Requires a dest string or options object');
   }
 
   if (typeof options === 'string') {
     options = {dest: options};
   } else if (typeof options.dest !== 'string') {
-    throw new PluginError('Requires a dest string');
+    throw new PluginError(PLUGIN_NAME, 'Requires a dest string');
   }
 
   if (options.ext && typeof options.ext !== 'string') {
-    throw new PluginError('Requires ext to be a string');
+    throw new PluginError(PLUGIN_NAME, 'Requires ext to be a string');
   }
 
   if (options.map && typeof options.map !== 'function') {
-    throw new PluginError('Requires map to be a function');
+    throw new PluginError(PLUGIN_NAME, 'Requires map to be a function');
   }
 
   /**
@@ -82,7 +85,7 @@ util.inherits(Newer, Transform);
  */
 Newer.prototype._transform = function(srcFile, encoding, done) {
   if (!srcFile || !srcFile.stat) {
-    done(new PluginError('gulp-newer', 'Expected a source file with stats'));
+    done(new PluginError(PLUGIN_NAME, 'Expected a source file with stats'));
     return;
   }
   var self = this;
