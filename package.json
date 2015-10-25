@@ -27,7 +27,7 @@
   },
   "devDependencies": {
     "chai": "^3.4.0",
-    "gulp": "~3.8.10",
+    "gulp": "^3.9.0",
     "jshint": "~2.5.10",
     "mocha": "^2.3.3",
     "mock-fs": "^3.4.0"
