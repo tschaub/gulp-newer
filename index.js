@@ -20,7 +20,7 @@ function Newer(options) {
 
   if (typeof options === 'string') {
     options = {dest: options};
-  } else if (typeof options.dest !== 'string') {
+  } else if (typeof options.dest !== 'undefined' && typeof options.dest !== 'string') {
     throw new PluginError(PLUGIN_NAME, 'Requires a dest string');
   }
 
@@ -30,6 +30,10 @@ function Newer(options) {
 
   if (options.map && typeof options.map !== 'function') {
     throw new PluginError(PLUGIN_NAME, 'Requires map to be a function');
+  }
+
+  if (!options.dest && !options.map) {
+    throw new PluginError(PLUGIN_NAME, 'Requires either options.dest or options.map or both');
   }
 
   /**
@@ -54,7 +58,7 @@ function Newer(options) {
    * Promise for the dest file/directory stats.
    * @type {[type]}
    */
-  this._destStats = Q.nfcall(fs.stat, this._dest);
+  this._destStats = this._dest ? Q.nfcall(fs.stat, this._dest) : Q.resolve(null);
 
   /**
    * If the provided dest is a file, we want to pass through all files if any
@@ -90,7 +94,7 @@ Newer.prototype._transform = function(srcFile, encoding, done) {
   }
   var self = this;
   this._destStats.then(function(destStats) {
-    if (destStats.isDirectory() || self._ext || self._map) {
+    if ((destStats && destStats.isDirectory()) || self._ext || self._map) {
       // stat dest/relative file
       var relative = srcFile.relative;
       var ext = path.extname(relative);
@@ -100,7 +104,9 @@ Newer.prototype._transform = function(srcFile, encoding, done) {
       if (self._map) {
         destFileRelative = self._map(destFileRelative);
       }
-      return Q.nfcall(fs.stat, path.join(self._dest, destFileRelative));
+      var destFileJoined = self._dest ?
+          path.join(self._dest, destFileRelative) : destFileRelative;
+      return Q.nfcall(fs.stat, destFileJoined);
     } else {
       // wait to see if any are newer, then pass through all
       if (!self._bufferedFiles) {
