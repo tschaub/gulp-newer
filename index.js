@@ -20,7 +20,7 @@ function Newer(options) {
 
   if (typeof options === 'string') {
     options = {dest: options};
-  } else if (typeof options.dest !== 'undefined' && typeof options.dest !== 'string') {
+  } else if (options.dest && typeof options.dest !== 'string') {
     throw new PluginError(PLUGIN_NAME, 'Requires a dest string');
   }
 
