@@ -71,7 +71,6 @@ describe('newer()', function() {
   describe('config.map', function() {
 
     it('must be a function', function() {
-
       assert.throws(function() {
         newer({dest: 'foo', map: 1});
       });
@@ -80,6 +79,13 @@ describe('newer()', function() {
         newer({dest: 'foo', map: 'bar'});
       });
     });
+
+    it('makes the dest config optional', function() {
+      assert.doesNotThrow(function() {
+        newer({map: function() {}});
+      });
+    });
+
   });
 
   describe('dest dir that does not exist', function() {
@@ -628,6 +634,32 @@ describe('newer()', function() {
 
       write(stream, paths);
     });
+
+    it('allows people to join to dest themselves', function(done) {
+      var stream = newer({
+        map: function(destPath) {
+          return path.join('dest', destPath.replace('.ext1', '.ext2'));
+        }
+      });
+
+      var paths = ['file1.ext1', 'file2.ext1'];
+
+      var calls = 0;
+      stream.on('data', function(file) {
+        assert.equal(file.path, path.resolve('file2.ext1'));
+        ++calls;
+      });
+
+      stream.on('error', done);
+
+      stream.on('end', function() {
+        assert.equal(calls, 1);
+        done();
+      });
+
+      write(stream, paths);
+    });
+
   });
 
   describe('reports errors', function() {
