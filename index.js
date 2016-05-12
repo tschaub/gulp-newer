@@ -2,6 +2,7 @@ var Transform = require('stream').Transform;
 var fs = require('fs');
 var path = require('path');
 var util = require('util');
+var glob = require('glob');
 
 var Q = require('kew');
 var gutil = require('gulp-util');
@@ -94,11 +95,24 @@ function Newer(options) {
   this._extraStats = null;
 
   if (options.extra) {
-    var extraStats = [];
+    var extraFiles = [];
     for (var i = 0; i < options.extra.length; ++i) {
-      extraStats.push(Q.nfcall(fs.stat, options.extra[i]));
+      extraFiles.push(Q.nfcall(glob, options.extra[i]));
     }
-    this._extraStats = Q.all(extraStats)
+    this._extraStats = Q.all(extraFiles)
+      .then(function(fileArrays) {
+        // First collect all the files in all the glob result arrays
+        var allFiles = [];
+        var i;
+        for (i = 0; i < fileArrays.length; ++i) {
+          allFiles = allFiles.concat(fileArrays[i]);
+        }
+        var extraStats = [];
+        for (i = 0; i < allFiles.length; ++i) {
+          extraStats.push(Q.nfcall(fs.stat, allFiles[i]));
+        }
+        return Q.all(extraStats);
+      })
       .then(function(resolvedStats) {
         // We get all the file stats here; find the *latest* modification.
         var latestStat = resolvedStats[0];
