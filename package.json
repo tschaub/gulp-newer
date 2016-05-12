@@ -36,7 +36,8 @@
     "mock-fs": "^3.4.0"
   },
   "dependencies": {
-    "kew": "^0.7.0",
-    "gulp-util": "^3.0.7"
+    "glob": "^7.0.3",
+    "gulp-util": "^3.0.7",
+    "kew": "^0.7.0"
   }
 }
