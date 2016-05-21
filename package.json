@@ -28,8 +28,8 @@
   },
   "devDependencies": {
     "code": "^3.0.0",
-    "eslint": "^1.7.3",
-    "eslint-config-tschaub": "^2.0.0",
+    "eslint": "^2.10.2",
+    "eslint-config-tschaub": "^4.0.0",
     "gulp": "^3.9.0",
     "lab": "^10.6.1",
     "mock-fs": "^3.9.0"
