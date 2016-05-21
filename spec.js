@@ -1,19 +1,14 @@
-/* eslint-env mocha */
-
 var Transform = require('stream').Transform;
+var expect = require('code').expect;
 var fs = require('fs');
+var gutil = require('gulp-util');
+var lab = exports.lab = require('lab').script();
+var mock = require('mock-fs');
+var newer = require('./index.js');
 var path = require('path');
 
-var chai = require('chai');
-var gutil = require('gulp-util');
-var mock = require('mock-fs');
-
-var newer = require('./index.js');
-
-chai.config.includeStack = true;
-
 var File = gutil.File;
-var assert = chai.assert;
+var PluginError = gutil.PluginError;
 
 /**
  * Test utility function.  Create File instances for each of the provided paths
@@ -32,88 +27,103 @@ function write(stream, paths) {
   stream.end();
 }
 
-describe('newer()', function() {
+lab.experiment('newer()', function() {
 
-  it('creates a transform stream', function() {
+  lab.test('creates a transform stream', function(done) {
     var stream = newer('foo');
-    assert.instanceOf(stream, Transform);
+    expect(stream).to.be.an.instanceof(Transform);
+    done();
   });
 
-  it('requires a string dest or an object with the dest property', function() {
+  lab.test('requires a string dest or an object with the dest property', function(done) {
 
-    assert.throws(function() {
+    expect(function() {
       newer();
-    });
+    }).to.throw(PluginError, 'Requires a dest string or options object');
 
-    assert.throws(function() {
+    expect(function() {
       newer(123);
-    });
+    }).to.throw(PluginError, 'Requires either options.dest or options.map or both');
 
-    assert.throws(function() {
+    expect(function() {
       newer({});
-    });
+    }).to.throw(PluginError, 'Requires either options.dest or options.map or both');
+
+    done();
   });
 
-  describe('config.ext', function() {
+  lab.experiment('config.ext', function() {
 
-    it('must be a string', function() {
+    lab.test('must be a string', function(done) {
 
-      assert.throws(function() {
+      expect(function() {
         newer({dest: 'foo', ext: 1});
-      });
+      }).to.throw(PluginError, 'Requires ext to be a string');
 
-      assert.throws(function() {
+      expect(function() {
         newer({dest: 'foo', ext: {}});
-      });
+      }).to.throw(PluginError, 'Requires ext to be a string');
+
+      done();
     });
   });
 
-  describe('config.map', function() {
+  lab.experiment('config.map', function() {
 
-    it('must be a function', function() {
-      assert.throws(function() {
+    lab.test('must be a function', function(done) {
+      expect(function() {
         newer({dest: 'foo', map: 1});
-      });
+      }).to.throw(PluginError, 'Requires map to be a function');
 
-      assert.throws(function() {
+      expect(function() {
         newer({dest: 'foo', map: 'bar'});
-      });
+      }).to.throw(PluginError, 'Requires map to be a function');
+
+      done();
     });
 
-    it('makes the dest config optional', function() {
-      assert.doesNotThrow(function() {
+    lab.test('makes the dest config optional', function(done) {
+      expect(function() {
         newer({map: function() {}});
-      });
+      }).not.to.throw();
+
+      done();
     });
 
   });
 
-  describe('dest dir that does not exist', function() {
+  lab.experiment('dest dir that does not exist', function() {
 
-    beforeEach(function() {
+    lab.beforeEach(function(done) {
       mock({
         source1: 'source1 content',
         source2: 'source2 content',
         source3: 'source3 content'
       });
-    });
-    afterEach(mock.restore);
 
-    it('passes through all files', function(done) {
+      done();
+    });
+
+    lab.afterEach(function(done) {
+      mock.restore();
+      done();
+    });
+
+    lab.test('passes through all files', function(done) {
       var stream = newer('new/dir');
 
       var paths = ['source1', 'source2', 'source3'];
 
       var calls = 0;
       stream.on('data', function(file) {
-        assert.equal(file.path, path.resolve(paths[calls]));
+        expect(file.path).to.equal(path.resolve(paths[calls]));
         ++calls;
       });
 
       stream.on('error', done);
 
       stream.on('end', function() {
-        assert.equal(calls, paths.length);
+        expect(calls).to.equal(paths.length);
         done();
       });
 
@@ -122,33 +132,37 @@ describe('newer()', function() {
 
   });
 
-  describe('dest file that does not exist', function() {
+  lab.experiment('dest file that does not exist', function() {
 
-    beforeEach(function() {
+    lab.beforeEach(function(done) {
       mock({
         file1: 'file1 content',
         file2: 'file2 content',
         file3: 'file3 content',
         dest: {}
       });
+      done();
     });
-    afterEach(mock.restore);
+    lab.afterEach(function(done) {
+      mock.restore();
+      done();
+    });
 
-    it('passes through all files', function(done) {
+    lab.test('passes through all files', function(done) {
       var stream = newer('dest/concat');
 
       var paths = ['file1', 'file2', 'file3'];
 
       var calls = 0;
       stream.on('data', function(file) {
-        assert.equal(file.path, path.resolve(paths[calls]));
+        expect(file.path).to.equal(path.resolve(paths[calls]));
         ++calls;
       });
 
       stream.on('error', done);
 
       stream.on('end', function() {
-        assert.equal(calls, paths.length);
+        expect(calls).to.equal(paths.length);
         done();
       });
 
@@ -157,33 +171,37 @@ describe('newer()', function() {
 
   });
 
-  describe('empty dest dir', function() {
+  lab.experiment('empty dest dir', function() {
 
-    beforeEach(function() {
+    lab.beforeEach(function(done) {
       mock({
         source1: 'source1 content',
         source2: 'source2 content',
         source3: 'source3 content',
         dest: {}
       });
+      done();
     });
-    afterEach(mock.restore);
+    lab.afterEach(function(done) {
+      mock.restore();
+      done();
+    });
 
-    it('passes through all files', function(done) {
+    lab.test('passes through all files', function(done) {
       var stream = newer('dest');
 
       var paths = ['source1', 'source2', 'source3'];
 
       var calls = 0;
       stream.on('data', function(file) {
-        assert.equal(file.path, path.resolve(paths[calls]));
+        expect(file.path).to.equal(path.resolve(paths[calls]));
         ++calls;
       });
 
       stream.on('error', done);
 
       stream.on('end', function() {
-        assert.equal(calls, paths.length);
+        expect(calls).to.equal(paths.length);
         done();
       });
 
@@ -192,9 +210,9 @@ describe('newer()', function() {
 
   });
 
-  describe('dest dir with one older file', function() {
+  lab.experiment('dest dir with one older file', function() {
 
-    beforeEach(function() {
+    lab.beforeEach(function(done) {
       mock({
         file1: 'file1 content',
         file2: 'file2 content',
@@ -206,24 +224,28 @@ describe('newer()', function() {
           })
         }
       });
+      done();
     });
-    afterEach(mock.restore);
+    lab.afterEach(function(done) {
+      mock.restore();
+      done();
+    });
 
-    it('passes through all files', function(done) {
+    lab.test('passes through all files', function(done) {
       var stream = newer('dest');
 
       var paths = ['file1', 'file2', 'file3'];
 
       var calls = 0;
       stream.on('data', function(file) {
-        assert.equal(file.path, path.resolve(paths[calls]));
+        expect(file.path).to.equal(path.resolve(paths[calls]));
         ++calls;
       });
 
       stream.on('error', done);
 
       stream.on('end', function() {
-        assert.equal(calls, paths.length);
+        expect(calls).to.equal(paths.length);
         done();
       });
 
@@ -232,9 +254,9 @@ describe('newer()', function() {
 
   });
 
-  describe('dest dir with one newer file', function() {
+  lab.experiment('dest dir with one newer file', function() {
 
-    beforeEach(function() {
+    lab.beforeEach(function(done) {
       mock({
         file1: mock.file({
           content: 'file1 content',
@@ -255,24 +277,28 @@ describe('newer()', function() {
           })
         }
       });
+      done();
     });
-    afterEach(mock.restore);
+    lab.afterEach(function(done) {
+      mock.restore();
+      done();
+    });
 
-    it('passes through two newer files', function(done) {
+    lab.test('passes through two newer files', function(done) {
       var stream = newer('dest');
 
       var paths = ['file1', 'file2', 'file3'];
 
       var calls = 0;
       stream.on('data', function(file) {
-        assert.notEqual(file.path, path.resolve('file2'));
+        expect(file.path).not.to.equal(path.resolve('file2'));
         ++calls;
       });
 
       stream.on('error', done);
 
       stream.on('end', function() {
-        assert.equal(calls, paths.length - 1);
+        expect(calls).to.equal(paths.length - 1);
         done();
       });
 
@@ -281,9 +307,9 @@ describe('newer()', function() {
 
   });
 
-  describe('dest dir with two newer and one older file', function() {
+  lab.experiment('dest dir with two newer and one older file', function() {
 
-    beforeEach(function() {
+    lab.beforeEach(function(done) {
       mock({
         file1: mock.file({
           content: 'file1 content',
@@ -312,24 +338,28 @@ describe('newer()', function() {
           })
         }
       });
+      done();
     });
-    afterEach(mock.restore);
+    lab.afterEach(function(done) {
+      mock.restore();
+      done();
+    });
 
-    it('passes through one newer file', function(done) {
+    lab.test('passes through one newer file', function(done) {
       var stream = newer('dest');
 
       var paths = ['file1', 'file2', 'file3'];
 
       var calls = 0;
       stream.on('data', function(file) {
-        assert.equal(file.path, path.resolve('file2'));
+        expect(file.path).to.equal(path.resolve('file2'));
         ++calls;
       });
 
       stream.on('error', done);
 
       stream.on('end', function() {
-        assert.equal(calls, 1);
+        expect(calls).to.equal(1);
         done();
       });
 
@@ -338,9 +368,9 @@ describe('newer()', function() {
 
   });
 
-  describe('dest file with first source file newer', function() {
+  lab.experiment('dest file with first source file newer', function() {
 
-    beforeEach(function() {
+    lab.beforeEach(function(done) {
       mock({
         file1: mock.file({
           content: 'file1 content',
@@ -361,24 +391,28 @@ describe('newer()', function() {
           })
         }
       });
+      done();
     });
-    afterEach(mock.restore);
+    lab.afterEach(function(done) {
+      mock.restore();
+      done();
+    });
 
-    it('passes through all source files', function(done) {
+    lab.test('passes through all source files', function(done) {
       var stream = newer('dest/output');
 
       var paths = ['file1', 'file2', 'file3'];
 
       var calls = 0;
       stream.on('data', function(file) {
-        assert.equal(file.path, path.resolve(paths[calls]));
+        expect(file.path).to.equal(path.resolve(paths[calls]));
         ++calls;
       });
 
       stream.on('error', done);
 
       stream.on('end', function() {
-        assert.equal(calls, paths.length);
+        expect(calls).to.equal(paths.length);
         done();
       });
 
@@ -387,9 +421,9 @@ describe('newer()', function() {
 
   });
 
-  describe('dest file with second source file newer', function() {
+  lab.experiment('dest file with second source file newer', function() {
 
-    beforeEach(function() {
+    lab.beforeEach(function(done) {
       mock({
         file1: mock.file({
           content: 'file1 content',
@@ -410,24 +444,28 @@ describe('newer()', function() {
           })
         }
       });
+      done();
     });
-    afterEach(mock.restore);
+    lab.afterEach(function(done) {
+      mock.restore();
+      done();
+    });
 
-    it('passes through all source files', function(done) {
+    lab.test('passes through all source files', function(done) {
       var stream = newer('dest/output');
 
       var paths = ['file1', 'file2', 'file3'];
 
       var calls = 0;
       stream.on('data', function(file) {
-        assert.equal(file.path, path.resolve(paths[calls]));
+        expect(file.path).to.equal(path.resolve(paths[calls]));
         ++calls;
       });
 
       stream.on('error', done);
 
       stream.on('end', function() {
-        assert.equal(calls, paths.length);
+        expect(calls).to.equal(paths.length);
         done();
       });
 
@@ -436,9 +474,9 @@ describe('newer()', function() {
 
   });
 
-  describe('dest file with last source file newer', function() {
+  lab.experiment('dest file with last source file newer', function() {
 
-    beforeEach(function() {
+    lab.beforeEach(function(done) {
       mock({
         file1: mock.file({
           content: 'file1 content',
@@ -459,24 +497,28 @@ describe('newer()', function() {
           })
         }
       });
+      done();
     });
-    afterEach(mock.restore);
+    lab.afterEach(function(done) {
+      mock.restore();
+      done();
+    });
 
-    it('passes through all source files', function(done) {
+    lab.test('passes through all source files', function(done) {
       var stream = newer('dest/output');
 
       var paths = ['file1', 'file2', 'file3'];
 
       var calls = 0;
       stream.on('data', function(file) {
-        assert.equal(file.path, path.resolve(paths[calls]));
+        expect(file.path).to.equal(path.resolve(paths[calls]));
         ++calls;
       });
 
       stream.on('error', done);
 
       stream.on('end', function() {
-        assert.equal(calls, paths.length);
+        expect(calls).to.equal(paths.length);
         done();
       });
 
@@ -485,9 +527,9 @@ describe('newer()', function() {
 
   });
 
-  describe('dest file with no newer source files', function() {
+  lab.experiment('dest file with no newer source files', function() {
 
-    beforeEach(function() {
+    lab.beforeEach(function(done) {
       mock({
         file1: mock.file({
           content: 'file1 content',
@@ -508,10 +550,14 @@ describe('newer()', function() {
           })
         }
       });
+      done()
     });
-    afterEach(mock.restore);
+    lab.afterEach(function(done) {
+      mock.restore();
+      done();
+    });
 
-    it('passes through no source files', function(done) {
+    lab.test('passes through no source files', function(done) {
       var stream = newer('dest/output');
 
       var paths = ['file1', 'file2', 'file3'];
@@ -525,7 +571,7 @@ describe('newer()', function() {
       stream.on('error', done);
 
       stream.on('end', function() {
-        assert.equal(calls, 0);
+        expect(calls).to.equal(0);
         done();
       });
 
@@ -534,9 +580,9 @@ describe('newer()', function() {
 
   });
 
-  describe('dest file ext and two files', function() {
+  lab.experiment('dest file ext and two files', function() {
 
-    beforeEach(function() {
+    lab.beforeEach(function(done) {
       mock({
         'file1.ext1': mock.file({
           content: 'file1 content',
@@ -557,24 +603,28 @@ describe('newer()', function() {
           })
         }
       });
+      done();
     });
-    afterEach(mock.restore);
+    lab.afterEach(function(done) {
+      mock.restore();
+      done();
+    });
 
-    it('passes through one newer file', function(done) {
+    lab.test('passes through one newer file', function(done) {
       var stream = newer({dest: 'dest', ext: '.ext2'});
 
       var paths = ['file1.ext1', 'file2.ext1'];
 
       var calls = 0;
       stream.on('data', function(file) {
-        assert.equal(file.path, path.resolve('file2.ext1'));
+        expect(file.path).to.equal(path.resolve('file2.ext1'));
         ++calls;
       });
 
       stream.on('error', done);
 
       stream.on('end', function() {
-        assert.equal(calls, 1);
+        expect(calls).to.equal(1);
         done();
       });
 
@@ -583,9 +633,9 @@ describe('newer()', function() {
 
   });
 
-  describe('custom mapping between source and dest', function() {
+  lab.experiment('custom mapping between source and dest', function() {
 
-    beforeEach(function() {
+    lab.beforeEach(function(done) {
       mock({
         'file1.ext1': mock.file({
           content: 'file1 content',
@@ -606,10 +656,14 @@ describe('newer()', function() {
           })
         }
       });
+      done();
     });
-    afterEach(mock.restore);
+    lab.afterEach(function(done) {
+      mock.restore();
+      done();
+    });
 
-    it('passes through one newer file', function(done) {
+    lab.test('passes through one newer file', function(done) {
       var stream = newer({
         dest: 'dest',
         map: function(destPath) {
@@ -621,21 +675,21 @@ describe('newer()', function() {
 
       var calls = 0;
       stream.on('data', function(file) {
-        assert.equal(file.path, path.resolve('file2.ext1'));
+        expect(file.path).to.equal(path.resolve('file2.ext1'));
         ++calls;
       });
 
       stream.on('error', done);
 
       stream.on('end', function() {
-        assert.equal(calls, 1);
+        expect(calls).to.equal(1);
         done();
       });
 
       write(stream, paths);
     });
 
-    it('allows people to join to dest themselves', function(done) {
+    lab.test('allows people to join to dest themselves', function(done) {
       var stream = newer({
         map: function(destPath) {
           return path.join('dest', destPath.replace('.ext1', '.ext2'));
@@ -646,14 +700,14 @@ describe('newer()', function() {
 
       var calls = 0;
       stream.on('data', function(file) {
-        assert.equal(file.path, path.resolve('file2.ext1'));
+        expect(file.path).to.equal(path.resolve('file2.ext1'));
         ++calls;
       });
 
       stream.on('error', done);
 
       stream.on('end', function() {
-        assert.equal(calls, 1);
+        expect(calls).to.equal(1);
         done();
       });
 
@@ -662,18 +716,22 @@ describe('newer()', function() {
 
   });
 
-  describe('reports errors', function() {
-    beforeEach(function() {
+  lab.experiment('reports errors', function() {
+    lab.beforeEach(function(done) {
       mock({
         'q': mock.file({
           mtime: new Date(100)
         }),
         dest: {}
       });
+      done();
     });
-    afterEach(mock.restore);
+    lab.afterEach(function(done) {
+      mock.restore();
+      done();
+    });
 
-    it('in "data" handlers', function(done) {
+    lab.test('in "data" handlers', function(done) {
       var stream = newer('dest');
 
       var err = new Error('test');
@@ -683,7 +741,7 @@ describe('newer()', function() {
       });
 
       stream.on('error', function(caught) {
-        assert.equal(caught, err);
+        expect(caught).to.equal(err);
         done();
       });
 
