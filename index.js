@@ -2,6 +2,7 @@ var Transform = require('stream').Transform;
 var fs = require('fs');
 var path = require('path');
 var util = require('util');
+var glob = require('glob');
 
 var Q = require('kew');
 var gutil = require('gulp-util');
@@ -34,6 +35,14 @@ function Newer(options) {
 
   if (!options.dest && !options.map) {
     throw new PluginError(PLUGIN_NAME, 'Requires either options.dest or options.map or both');
+  }
+
+  if (options.extra) {
+    if (typeof options.extra === 'string') {
+      options.extra = [options.extra];
+    } else if (!Array.isArray(options.extra)) {
+      throw new PluginError(PLUGIN_NAME, 'Requires options.extra to be a string or array');
+    }
   }
 
   /**
@@ -77,6 +86,55 @@ function Newer(options) {
    */
   this._all = false;
 
+  /**
+   * Indicates that there are extra files (configuration files, etc.)
+   * that are not to be fed into the stream, but that should force
+   * all files to be rebuilt if *any* are older than one of the extra
+   * files.
+   */
+  this._extraStats = null;
+
+  if (options.extra) {
+    var extraFiles = [];
+    for (var i = 0; i < options.extra.length; ++i) {
+      extraFiles.push(Q.nfcall(glob, options.extra[i]));
+    }
+    this._extraStats = Q.all(extraFiles)
+      .then(function(fileArrays) {
+        // First collect all the files in all the glob result arrays
+        var allFiles = [];
+        var i;
+        for (i = 0; i < fileArrays.length; ++i) {
+          allFiles = allFiles.concat(fileArrays[i]);
+        }
+        var extraStats = [];
+        for (i = 0; i < allFiles.length; ++i) {
+          extraStats.push(Q.nfcall(fs.stat, allFiles[i]));
+        }
+        return Q.all(extraStats);
+      })
+      .then(function(resolvedStats) {
+        // We get all the file stats here; find the *latest* modification.
+        var latestStat = resolvedStats[0];
+        for (var j = 1; j < resolvedStats.length; ++j) {
+          if (resolvedStats[j].mtime > latestStat.mtime) {
+            latestStat = resolvedStats[j];
+          }
+        }
+        return latestStat;
+      })
+      .fail(function(error) {
+        if (error && error.path) {
+          throw new PluginError(PLUGIN_NAME, 'Failed to read stats for an extra file: ' + error.path);
+        } else {
+          throw new PluginError(PLUGIN_NAME, 'Failed to stat extra files; unknown error: ' + error);
+        }
+      });
+
+    // When extra files are present, we buffer all the files.
+    this._bufferedFiles = [];
+  }
+
 }
 util.inherits(Newer, Transform);
 
@@ -93,57 +151,63 @@ Newer.prototype._transform = function(srcFile, encoding, done) {
     return;
   }
   var self = this;
-  this._destStats.then(function(destStats) {
-    if ((destStats && destStats.isDirectory()) || self._ext || self._map) {
-      // stat dest/relative file
-      var relative = srcFile.relative;
-      var ext = path.extname(relative);
-      var destFileRelative = self._ext ?
+  Q.resolve([this._destStats, this._extraStats])
+    .spread(function(destStats, extraStats) {
+      if ((destStats && destStats.isDirectory()) || self._ext || self._map) {
+        // stat dest/relative file
+        var relative = srcFile.relative;
+        var ext = path.extname(relative);
+        var destFileRelative = self._ext ?
           relative.substr(0, relative.length - ext.length) + self._ext :
           relative;
-      if (self._map) {
-        destFileRelative = self._map(destFileRelative);
-      }
-      var destFileJoined = self._dest ?
+        if (self._map) {
+          destFileRelative = self._map(destFileRelative);
+        }
+        var destFileJoined = self._dest ?
           path.join(self._dest, destFileRelative) : destFileRelative;
-      return Q.nfcall(fs.stat, destFileJoined);
-    } else {
-      // wait to see if any are newer, then pass through all
-      if (!self._bufferedFiles) {
-        self._bufferedFiles = [];
+        return Q.all([Q.nfcall(fs.stat, destFileJoined),extraStats]);
+      } else {
+        // wait to see if any are newer, then pass through all
+        if (!self._bufferedFiles) {
+          self._bufferedFiles = [];
+        }
+        return [destStats, extraStats];
       }
-      return Q.resolve(destStats);
-    }
-  }).fail(function(err) {
-    if (err.code === 'ENOENT') {
-      // dest file or directory doesn't exist, pass through all
-      return Q.resolve(null);
-    } else {
-      // unexpected error
-      return Q.reject(err);
-    }
-  }).then(function(destFileStats) {
-    var newer = !destFileStats || srcFile.stat.mtime > destFileStats.mtime;
-    if (self._all) {
-      self.push(srcFile);
-    } else if (!newer) {
-      if (self._bufferedFiles) {
-        self._bufferedFiles.push(srcFile);
+    }).fail(function(err) {
+      if (err.code === 'ENOENT') {
+        // dest file or directory doesn't exist, pass through all
+        return Q.resolve([null,this._extraStats]);
+      } else {
+        // unexpected error
+        return Q.reject(err);
       }
-    } else {
-      if (self._bufferedFiles) {
-        // flush buffer
-        self._bufferedFiles.forEach(function(file) {
-          self.push(file);
-        });
-        self._bufferedFiles.length = 0;
-        // pass through all remaining files as well
-        self._all = true;
+    }).spread(function(destFileStats, extraFileStats) {
+      var newer = !destFileStats || srcFile.stat.mtime > destFileStats.mtime;
+      // If *any* extra file is newer than a destination file, then ALL
+      // are newer.
+      if (extraFileStats && extraFileStats.mtime > destFileStats.mtime) {
+        newer = true;
       }
-      self.push(srcFile);
-    }
-    done();
-  }).fail(done).end();
+      if (self._all) {
+        self.push(srcFile);
+      } else if (!newer) {
+        if (self._bufferedFiles) {
+          self._bufferedFiles.push(srcFile);
+        }
+      } else {
+        if (self._bufferedFiles) {
+          // flush buffer
+          self._bufferedFiles.forEach(function(file) {
+            self.push(file);
+          });
+          self._bufferedFiles.length = 0;
+          // pass through all remaining files as well
+          self._all = true;
+        }
+        self.push(srcFile);
+      }
+      done();
+    }).fail(done).end();
 
 };
 

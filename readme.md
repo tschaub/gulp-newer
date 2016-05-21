@@ -70,6 +70,7 @@ gulp.task('concat', function() {
  * **options.dest** - `string` As above, *required*.
  * **options.ext** - `string` Source files will be matched to destination files with the provided extension (e.g. '.css').
  * **options.map** - `function` Map relative source paths to relative destination paths (e.g. `function(relativePath) { return relativePath + '.bak'; }`)
+ * **options.extra** - `string` or `array` An extra file, file glob, or list of extra files and/or globs, to check for updated time stamp(s). If any of these files are newer than the destination files, then all source files will be passed into the stream.
 
 Create a [transform stream](http://nodejs.org/api/stream.html#stream_class_stream_transform_1) that passes through files whose modification time is more recent than the corresponding destination file's modification time.
 
