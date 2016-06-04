@@ -88,6 +88,81 @@ describe('newer()', function() {
 
   });
 
+  describe('config.extra', function() {
+
+    beforeEach(function() {
+      mock({
+        main: mock.file({
+          content: 'main content',
+          mtime: new Date(1)
+        }),
+        imported: mock.file({
+          content: '2: other content, used by main',
+          mtime: new Date(3)
+        }),
+        collected: mock.file({
+          content: 'main content\n1: other content, used by main',
+          mtime: new Date(2)
+        })
+      });
+    });
+    afterEach(mock.restore);
+
+    it('must be a string or an array', function() {
+      assert.throws(function() {
+        newer({dest: 'foo', extra: 1});
+      });
+
+      assert.throws(function() {
+        newer({dest: 'foo', extra: function() {}});
+      });
+
+      assert.doesNotThrow(function() {
+        newer({dest: 'foo', extra: 'extra1'});
+      });
+
+      assert.doesNotThrow(function() {
+        newer({dest: 'foo', extra: ['extra1', 'extra2']});
+      });
+    });
+
+    it('must not be passed into stream', function(done) {
+      var stream = newer({dest: 'collected', extra: 'imported'});
+
+      var paths = ['main'];
+
+      stream.on('data', function(file) {
+        assert.notEqual(file.path, path.resolve('imported'));
+      });
+      stream.on('error', done);
+      stream.on('end', done);
+
+      write(stream, paths);
+    });
+
+    it('must let other files through stream if an "extra" is newer', function(done) {
+      var stream = newer({dest: 'collected', extra: 'imported'});
+
+      var paths = ['main'];
+
+      var calls = 0;
+      stream.on('data', function(file) {
+        assert.equal(file.path, path.resolve(paths[calls]));
+        ++calls;
+      });
+
+      stream.on('error', done);
+
+      stream.on('end', function() {
+        assert.equal(calls, paths.length);
+        done();
+      });
+
+      write(stream, paths);
+    });
+
+  });
+
   describe('dest dir that does not exist', function() {
 
     beforeEach(function() {
@@ -517,7 +592,7 @@ describe('newer()', function() {
       var paths = ['file1', 'file2', 'file3'];
 
       var calls = 0;
-      stream.on('data', function(file) {
+      stream.on('data', function() {
         done(new Error('Expected no source files'));
         ++calls;
       });
