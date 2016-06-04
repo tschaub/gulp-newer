@@ -98,11 +98,11 @@ describe('newer()', function() {
         }),
         imported: mock.file({
           content: '2: other content, used by main',
-          mtime: new Date(2)
+          mtime: new Date(3)
         }),
         collected: mock.file({
           content: 'main content\n1: other content, used by main',
-          mtime: new Date(1)
+          mtime: new Date(2)
         })
       });
     });
@@ -127,7 +127,7 @@ describe('newer()', function() {
     });
 
     it('must not be passed into stream', function(done) {
-      var stream = newer('dest');
+      var stream = newer({dest: 'collected', extra: 'imported'});
 
       var paths = ['main'];
 
@@ -141,7 +141,7 @@ describe('newer()', function() {
     });
 
     it('must let other files through stream if an "extra" is newer', function(done) {
-      var stream = newer('dest');
+      var stream = newer({dest: 'collected', extra: 'imported'});
 
       var paths = ['main'];
 
