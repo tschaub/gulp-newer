@@ -130,9 +130,6 @@ function Newer(options) {
           throw new PluginError(PLUGIN_NAME, 'Failed to stat extra files; unknown error: ' + error);
         }
       });
-
-    // When extra files are present, we buffer all the files.
-    this._bufferedFiles = [];
   }
 
 }
