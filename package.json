@@ -27,16 +27,19 @@
     "test": "mocha spec.js"
   },
   "devDependencies": {
-    "chai": "^3.4.0",
-    "eslint": "^2.11.1",
-    "eslint-config-tschaub": "^4.0.0",
-    "gulp": "^3.9.0",
-    "mocha": "^2.3.3",
-    "mock-fs": "^3.4.0"
+    "chai": "^3.5.0",
+    "eslint": "^3.7.1",
+    "eslint-config-tschaub": "^6.0.0",
+    "gulp": "^3.9.1",
+    "mocha": "^3.1.0",
+    "mock-fs": "^3.11.0"
   },
   "dependencies": {
     "glob": "^7.0.3",
     "gulp-util": "^3.0.7",
     "kew": "^0.7.0"
+  },
+  "eslintConfig": {
+    "extends": "tschaub"
   }
 }

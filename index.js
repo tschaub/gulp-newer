@@ -165,7 +165,7 @@ Newer.prototype._transform = function(srcFile, encoding, done) {
         }
         var destFileJoined = self._dest ?
           path.join(self._dest, destFileRelative) : destFileRelative;
-        return Q.all([Q.nfcall(fs.stat, destFileJoined),extraStats]);
+        return Q.all([Q.nfcall(fs.stat, destFileJoined), extraStats]);
       } else {
         // wait to see if any are newer, then pass through all
         if (!self._bufferedFiles) {
@@ -176,7 +176,7 @@ Newer.prototype._transform = function(srcFile, encoding, done) {
     }).fail(function(err) {
       if (err.code === 'ENOENT') {
         // dest file or directory doesn't exist, pass through all
-        return Q.resolve([null,this._extraStats]);
+        return Q.resolve([null, this._extraStats]);
       } else {
         // unexpected error
         return Q.reject(err);
