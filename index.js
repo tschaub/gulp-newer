@@ -45,6 +45,12 @@ function Newer(options) {
     }
   }
 
+  if (options.dependencyMap) {
+    if (typeof options.dependencyMap !== 'object') {
+      throw new PluginError(PLUGIN_NAME, 'Requires options.dependencyMap to be an object of string to array of strings');
+    }
+  }
+
   /**
    * Path to destination directory or file.
    * @type {string}
@@ -93,6 +99,45 @@ function Newer(options) {
    * files.
    */
   this._extraStats = null;
+
+  /**
+   * Changing any dependencies of a file should force the file itself to be
+   * rebuilt.
+   * @type Promise({[string]: {mtime: int}})?
+   */
+  this._dependencyMapStats = null;
+
+  if (options.dependencyMap) {
+    const depMapStats = {};
+    for (let key in options.dependencyMap) {
+      const deps = options.dependencyMap[key];
+      const depsStats = deps.map(fn => Q.nfcall(fs.stat, fn).fail(e => null));
+      depMapStats[key] = Q.all(depsStats)
+        .then(function(resolvedStats) {
+          return resolvedStats.reduce((a, b) => {
+            if (!a) return b;
+            if (!b) return a;
+            return a.mtime > b.mtime ? a : b;
+          });
+        })
+        .fail(err => {
+          // Ignore missing files, deps might have changed.
+        });
+    }
+    this._dependencyMapStats = Q.all(Object.values(depMapStats))
+      // Resolve to depMapStats' promises' data.
+      .then(_ => depMapStats)
+      .then(promiseMap => {
+        const map = {};
+        const setValue = key => value => {
+          map[key] = value;
+        };
+        for (let key in promiseMap) {
+          promiseMap[key].then(setValue(key));
+        }
+        return map;
+      });
+  }
 
   if (options.extra) {
     var extraFiles = [];
@@ -148,8 +193,8 @@ Newer.prototype._transform = function(srcFile, encoding, done) {
     return;
   }
   var self = this;
-  Q.resolve([this._destStats, this._extraStats])
-    .spread(function(destStats, extraStats) {
+  Q.resolve([this._destStats, this._extraStats, this._dependencyMapStats])
+    .spread(function(destStats, extraStats, depMapStats) {
       if ((destStats && destStats.isDirectory()) || self._ext || self._map) {
         // stat dest/relative file
         var relative = srcFile.relative;
@@ -162,27 +207,30 @@ Newer.prototype._transform = function(srcFile, encoding, done) {
         }
         var destFileJoined = self._dest ?
           path.join(self._dest, destFileRelative) : destFileRelative;
-        return Q.all([Q.nfcall(fs.stat, destFileJoined), extraStats]);
+        return Q.all([Q.nfcall(fs.stat, destFileJoined), extraStats, depMapStats]);
       } else {
         // wait to see if any are newer, then pass through all
         if (!self._bufferedFiles) {
           self._bufferedFiles = [];
         }
-        return [destStats, extraStats];
+        return [destStats, extraStats, depMapStats];
       }
     }).fail(function(err) {
       if (err.code === 'ENOENT') {
         // dest file or directory doesn't exist, pass through all
-        return Q.resolve([null, this._extraStats]);
+        return Q.resolve([null, this._extraStats, this._dependencyMapStats]);
       } else {
         // unexpected error
         return Q.reject(err);
       }
-    }).spread(function(destFileStats, extraFileStats) {
+    }).spread(function(destFileStats, extraFileStats, depMapStats) {
       var newer = !destFileStats || srcFile.stat.mtime > destFileStats.mtime;
       // If *any* extra file is newer than a destination file, then ALL
       // are newer.
       if (extraFileStats && extraFileStats.mtime > destFileStats.mtime) {
+        newer = true;
+      }
+      if (depMapStats && depMapStats[srcFile.path] && depMapStats[srcFile.path].mtime > destFileStats.mtime) {
         newer = true;
       }
       if (self._all) {
