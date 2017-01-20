@@ -124,7 +124,7 @@ function Newer(options) {
           // Ignore missing files, deps might have changed.
         });
     }
-    this._dependencyMapStats = Q.all(Object.values(depMapStats))
+    this._dependencyMapStats = Q.all(Object.keys(depMapStats).map(k => depMapStats[k]))
       // Resolve to depMapStats' promises' data.
       .then(_ => depMapStats)
       .then(promiseMap => {
