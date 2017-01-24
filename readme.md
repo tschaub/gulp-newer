@@ -1,5 +1,7 @@
 # `gulp-newer`
 
+[![Greenkeeper badge](https://badges.greenkeeper.io/tschaub/gulp-newer.svg)](https://greenkeeper.io/)
+
 A [Gulp](http://gulpjs.com/) plugin for passing through only those source files that are newer than corresponding destination files.
 
 ## Install
