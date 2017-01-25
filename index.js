@@ -109,7 +109,7 @@ function Newer(options) {
 
   if (options.dependencyMap) {
     const depMapStats = {};
-    for (let key in options.dependencyMap) {
+    for (var key in options.dependencyMap) {
       const deps = options.dependencyMap[key];
       const depsStats = deps.map(fn => Q.nfcall(fs.stat, fn).fail(e => null));
       depMapStats[key] = Q.all(depsStats)
@@ -132,7 +132,7 @@ function Newer(options) {
         const setValue = key => value => {
           map[key] = value;
         };
-        for (let key in promiseMap) {
+        for (var key in promiseMap) {
           promiseMap[key].then(setValue(key));
         }
         return map;
