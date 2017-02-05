@@ -32,7 +32,7 @@
     "eslint-config-tschaub": "^6.0.0",
     "gulp": "^3.9.1",
     "mocha": "^3.1.0",
-    "mock-fs": "^3.11.0"
+    "mock-fs": "^4.0.0"
   },
   "dependencies": {
     "glob": "^7.0.3",
