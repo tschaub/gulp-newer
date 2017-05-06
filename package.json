@@ -29,7 +29,7 @@
   "devDependencies": {
     "chai": "^3.5.0",
     "eslint": "^3.7.1",
-    "eslint-config-tschaub": "^6.0.0",
+    "eslint-config-tschaub": "^7.0.0",
     "gulp": "^3.9.1",
     "mocha": "^3.1.0",
     "mock-fs": "^4.0.0"
