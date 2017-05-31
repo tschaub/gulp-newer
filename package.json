@@ -27,7 +27,7 @@
     "test": "mocha spec.js"
   },
   "devDependencies": {
-    "chai": "^3.5.0",
+    "chai": "^4.0.1",
     "eslint": "^3.7.1",
     "eslint-config-tschaub": "^6.0.0",
     "gulp": "^3.9.1",
