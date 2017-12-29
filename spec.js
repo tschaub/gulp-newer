@@ -5,14 +5,13 @@ var fs = require('fs');
 var path = require('path');
 
 var chai = require('chai');
-var gutil = require('gulp-util');
+var Vinyl = require('vinyl');
 var mock = require('mock-fs');
 
 var newer = require('./index.js');
 
 chai.config.includeStack = true;
 
-var File = gutil.File;
 var assert = chai.assert;
 
 /**
@@ -23,7 +22,7 @@ var assert = chai.assert;
  */
 function write(stream, paths) {
   paths.forEach(function(filePath) {
-    stream.write(new File({
+    stream.write(new Vinyl({
       contents: fs.readFileSync(filePath),
       path: path.resolve(filePath),
       stat: fs.statSync(filePath)
