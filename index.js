@@ -1,3 +1,7 @@
+//2018-01-02 sc mod: gulp-util deprecation
+//2018-01-02 sc mod: require plugin-error to replace gutil.PluginError
+
+
 var Transform = require('stream').Transform;
 var fs = require('fs');
 var path = require('path');
@@ -5,9 +9,11 @@ var util = require('util');
 var glob = require('glob');
 
 var Q = require('kew');
-var gutil = require('gulp-util');
 
-var PluginError = gutil.PluginError;
+//var gutil = require('gulp-util');
+//var PluginError = gutil.PluginError;
+var PluginError = require('plugin-error');
+
 
 var PLUGIN_NAME = 'gulp-newer';
 
