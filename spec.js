@@ -22,24 +22,24 @@ var assert = chai.assert;
  */
 function write(stream, paths) {
   paths.forEach(function(filePath) {
-    stream.write(new Vinyl({
-      contents: fs.readFileSync(filePath),
-      path: path.resolve(filePath),
-      stat: fs.statSync(filePath)
-    }));
+    stream.write(
+      new Vinyl({
+        contents: fs.readFileSync(filePath),
+        path: path.resolve(filePath),
+        stat: fs.statSync(filePath)
+      })
+    );
   });
   stream.end();
 }
 
 describe('newer()', function() {
-
   it('creates a transform stream', function() {
     var stream = newer('foo');
     assert.instanceOf(stream, Transform);
   });
 
   it('requires a string dest or an object with the dest property', function() {
-
     assert.throws(function() {
       newer();
     });
@@ -54,9 +54,7 @@ describe('newer()', function() {
   });
 
   describe('config.ext', function() {
-
     it('must be a string', function() {
-
       assert.throws(function() {
         newer({dest: 'foo', ext: 1});
       });
@@ -68,7 +66,6 @@ describe('newer()', function() {
   });
 
   describe('config.map', function() {
-
     it('must be a function', function() {
       assert.throws(function() {
         newer({dest: 'foo', map: 1});
@@ -84,11 +81,9 @@ describe('newer()', function() {
         newer({map: function() {}});
       });
     });
-
   });
 
   describe('config.extra', function() {
-
     beforeEach(function() {
       mock({
         main: mock.file({
@@ -139,7 +134,9 @@ describe('newer()', function() {
       write(stream, paths);
     });
 
-    it('must let other files through stream if an "extra" is newer', function(done) {
+    it('must let other files through stream if an "extra" is newer', function(
+      done
+    ) {
       var stream = newer({dest: 'collected', extra: 'imported'});
 
       var paths = ['main'];
@@ -159,11 +156,9 @@ describe('newer()', function() {
 
       write(stream, paths);
     });
-
   });
 
   describe('dest dir that does not exist', function() {
-
     beforeEach(function() {
       mock({
         source1: 'source1 content',
@@ -193,11 +188,9 @@ describe('newer()', function() {
 
       write(stream, paths);
     });
-
   });
 
   describe('dest file that does not exist', function() {
-
     beforeEach(function() {
       mock({
         file1: 'file1 content',
@@ -228,11 +221,9 @@ describe('newer()', function() {
 
       write(stream, paths);
     });
-
   });
 
   describe('empty dest dir', function() {
-
     beforeEach(function() {
       mock({
         source1: 'source1 content',
@@ -263,11 +254,9 @@ describe('newer()', function() {
 
       write(stream, paths);
     });
-
   });
 
   describe('dest dir with one older file', function() {
-
     beforeEach(function() {
       mock({
         file1: 'file1 content',
@@ -303,11 +292,9 @@ describe('newer()', function() {
 
       write(stream, paths);
     });
-
   });
 
   describe('dest dir with one newer file', function() {
-
     beforeEach(function() {
       mock({
         file1: mock.file({
@@ -352,11 +339,9 @@ describe('newer()', function() {
 
       write(stream, paths);
     });
-
   });
 
   describe('dest dir with two newer and one older file', function() {
-
     beforeEach(function() {
       mock({
         file1: mock.file({
@@ -409,11 +394,9 @@ describe('newer()', function() {
 
       write(stream, paths);
     });
-
   });
 
   describe('dest file with first source file newer', function() {
-
     beforeEach(function() {
       mock({
         file1: mock.file({
@@ -458,11 +441,9 @@ describe('newer()', function() {
 
       write(stream, paths);
     });
-
   });
 
   describe('dest file with second source file newer', function() {
-
     beforeEach(function() {
       mock({
         file1: mock.file({
@@ -507,11 +488,9 @@ describe('newer()', function() {
 
       write(stream, paths);
     });
-
   });
 
   describe('dest file with last source file newer', function() {
-
     beforeEach(function() {
       mock({
         file1: mock.file({
@@ -556,11 +535,9 @@ describe('newer()', function() {
 
       write(stream, paths);
     });
-
   });
 
   describe('dest file with no newer source files', function() {
-
     beforeEach(function() {
       mock({
         file1: mock.file({
@@ -605,11 +582,9 @@ describe('newer()', function() {
 
       write(stream, paths);
     });
-
   });
 
   describe('dest file ext and two files', function() {
-
     beforeEach(function() {
       mock({
         'file1.ext1': mock.file({
@@ -654,11 +629,9 @@ describe('newer()', function() {
 
       write(stream, paths);
     });
-
   });
 
   describe('custom mapping between source and dest', function() {
-
     beforeEach(function() {
       mock({
         'file1.ext1': mock.file({
@@ -733,13 +706,12 @@ describe('newer()', function() {
 
       write(stream, paths);
     });
-
   });
 
   describe('reports errors', function() {
     beforeEach(function() {
       mock({
-        'q': mock.file({
+        q: mock.file({
           mtime: new Date(100)
         }),
         dest: {}
@@ -763,7 +735,5 @@ describe('newer()', function() {
 
       write(stream, ['q']);
     });
-
   });
-
 });
