@@ -5,9 +5,7 @@ var util = require('util');
 var glob = require('glob');
 
 var Q = require('kew');
-var gutil = require('gulp-util');
-
-var PluginError = gutil.PluginError;
+var PluginError = require('plugin-error');
 
 var PLUGIN_NAME = 'gulp-newer';
 

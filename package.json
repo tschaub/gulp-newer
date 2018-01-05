@@ -32,12 +32,13 @@
     "eslint-config-tschaub": "^6.0.0",
     "gulp": "^3.9.1",
     "mocha": "^3.1.0",
-    "mock-fs": "^4.0.0"
+    "mock-fs": "^4.0.0",
+    "vinyl": "^2.1.0"
   },
   "dependencies": {
     "glob": "^7.0.3",
-    "gulp-util": "^3.0.7",
-    "kew": "^0.7.0"
+    "kew": "^0.7.0",
+    "plugin-error": "^0.1.2"
   },
   "eslintConfig": {
     "extends": "tschaub"
