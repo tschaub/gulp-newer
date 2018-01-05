@@ -13,8 +13,10 @@ function Newer(options) {
   Transform.call(this, {objectMode: true});
 
   if (!options) {
-    throw new PluginError(PLUGIN_NAME,
-      'Requires a dest string or options object');
+    throw new PluginError(
+      PLUGIN_NAME,
+      'Requires a dest string or options object'
+    );
   }
 
   if (typeof options === 'string') {
@@ -32,14 +34,20 @@ function Newer(options) {
   }
 
   if (!options.dest && !options.map) {
-    throw new PluginError(PLUGIN_NAME, 'Requires either options.dest or options.map or both');
+    throw new PluginError(
+      PLUGIN_NAME,
+      'Requires either options.dest or options.map or both'
+    );
   }
 
   if (options.extra) {
     if (typeof options.extra === 'string') {
       options.extra = [options.extra];
     } else if (!Array.isArray(options.extra)) {
-      throw new PluginError(PLUGIN_NAME, 'Requires options.extra to be a string or array');
+      throw new PluginError(
+        PLUGIN_NAME,
+        'Requires options.extra to be a string or array'
+      );
     }
   }
 
@@ -65,7 +73,9 @@ function Newer(options) {
    * Promise for the dest file/directory stats.
    * @type {[type]}
    */
-  this._destStats = this._dest ? Q.nfcall(fs.stat, this._dest) : Q.resolve(null);
+  this._destStats = this._dest
+    ? Q.nfcall(fs.stat, this._dest)
+    : Q.resolve(null);
 
   /**
    * If the provided dest is a file, we want to pass through all files if any
@@ -123,16 +133,20 @@ function Newer(options) {
       })
       .fail(function(error) {
         if (error && error.path) {
-          throw new PluginError(PLUGIN_NAME, 'Failed to read stats for an extra file: ' + error.path);
+          throw new PluginError(
+            PLUGIN_NAME,
+            'Failed to read stats for an extra file: ' + error.path
+          );
         } else {
-          throw new PluginError(PLUGIN_NAME, 'Failed to stat extra files; unknown error: ' + error);
+          throw new PluginError(
+            PLUGIN_NAME,
+            'Failed to stat extra files; unknown error: ' + error
+          );
         }
       });
   }
-
 }
 util.inherits(Newer, Transform);
-
 
 /**
  * Pass through newer files only.
@@ -152,14 +166,15 @@ Newer.prototype._transform = function(srcFile, encoding, done) {
         // stat dest/relative file
         var relative = srcFile.relative;
         var ext = path.extname(relative);
-        var destFileRelative = self._ext ?
-          relative.substr(0, relative.length - ext.length) + self._ext :
-          relative;
+        var destFileRelative = self._ext
+          ? relative.substr(0, relative.length - ext.length) + self._ext
+          : relative;
         if (self._map) {
           destFileRelative = self._map(destFileRelative);
         }
-        var destFileJoined = self._dest ?
-          path.join(self._dest, destFileRelative) : destFileRelative;
+        var destFileJoined = self._dest
+          ? path.join(self._dest, destFileRelative)
+          : destFileRelative;
         return Q.all([Q.nfcall(fs.stat, destFileJoined), extraStats]);
       } else {
         // wait to see if any are newer, then pass through all
@@ -168,7 +183,8 @@ Newer.prototype._transform = function(srcFile, encoding, done) {
         }
         return [destStats, extraStats];
       }
-    }).fail(function(err) {
+    })
+    .fail(function(err) {
       if (err.code === 'ENOENT') {
         // dest file or directory doesn't exist, pass through all
         return Q.resolve([null, this._extraStats]);
@@ -176,7 +192,8 @@ Newer.prototype._transform = function(srcFile, encoding, done) {
         // unexpected error
         return Q.reject(err);
       }
-    }).spread(function(destFileStats, extraFileStats) {
+    })
+    .spread(function(destFileStats, extraFileStats) {
       var newer = !destFileStats || srcFile.stat.mtime > destFileStats.mtime;
       // If *any* extra file is newer than a destination file, then ALL
       // are newer.
@@ -202,10 +219,10 @@ Newer.prototype._transform = function(srcFile, encoding, done) {
         self.push(srcFile);
       }
       done();
-    }).fail(done).end();
-
+    })
+    .fail(done)
+    .end();
 };
-
 
 /**
  * Remove references to buffered files.
@@ -215,7 +232,6 @@ Newer.prototype._flush = function(done) {
   this._bufferedFiles = null;
   done();
 };
-
 
 /**
  * Only pass through source files that are newer than the provided destination.
