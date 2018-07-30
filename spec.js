@@ -265,7 +265,8 @@ describe('newer()', function() {
         dest: {
           file2: mock.file({
             content: 'file2 content',
-            mtime: new Date(1)
+            mtime: new Date(1),
+            ctime: new Date(1)
           })
         }
       });
@@ -292,6 +293,27 @@ describe('newer()', function() {
 
       write(stream, paths);
     });
+
+    it('passes through all files, checking ctime', function(done) {
+      var stream = newer({dest: 'dest', ctime: true});
+
+      var paths = ['file1', 'file2', 'file3'];
+
+      var calls = 0;
+      stream.on('data', function(file) {
+        assert.equal(file.path, path.resolve(paths[calls]));
+        ++calls;
+      });
+
+      stream.on('error', done);
+
+      stream.on('end', function() {
+        assert.equal(calls, paths.length);
+        done();
+      });
+
+      write(stream, paths);
+    });
   });
 
   describe('dest dir with one newer file', function() {
@@ -299,20 +321,24 @@ describe('newer()', function() {
       mock({
         file1: mock.file({
           content: 'file1 content',
-          mtime: new Date(100)
+          mtime: new Date(100),
+          ctime: new Date(100)
         }),
         file2: mock.file({
           content: 'file2 content',
-          mtime: new Date(100)
+          mtime: new Date(100),
+          ctime: new Date(100)
         }),
         file3: mock.file({
           content: 'file3 content',
-          mtime: new Date(100)
+          mtime: new Date(100),
+          ctime: new Date(100)
         }),
         dest: {
           file2: mock.file({
             content: 'file2 content',
-            mtime: new Date(200)
+            mtime: new Date(200),
+            ctime: new Date(200)
           })
         }
       });
@@ -339,6 +365,27 @@ describe('newer()', function() {
 
       write(stream, paths);
     });
+
+    it('passes through two newer files, checking ctime', function(done) {
+      var stream = newer({dest: 'dest', ctime: true});
+
+      var paths = ['file1', 'file2', 'file3'];
+
+      var calls = 0;
+      stream.on('data', function(file) {
+        assert.notEqual(file.path, path.resolve('file2'));
+        ++calls;
+      });
+
+      stream.on('error', done);
+
+      stream.on('end', function() {
+        assert.equal(calls, paths.length - 1);
+        done();
+      });
+
+      write(stream, paths);
+    });
   });
 
   describe('dest dir with two newer and one older file', function() {
@@ -346,28 +393,34 @@ describe('newer()', function() {
       mock({
         file1: mock.file({
           content: 'file1 content',
-          mtime: new Date(100)
+          mtime: new Date(100),
+          ctime: new Date(100)
         }),
         file2: mock.file({
           content: 'file2 content',
-          mtime: new Date(100)
+          mtime: new Date(100),
+          ctime: new Date(100)
         }),
         file3: mock.file({
           content: 'file3 content',
-          mtime: new Date(100)
+          mtime: new Date(100),
+          ctime: new Date(100)
         }),
         dest: {
           file1: mock.file({
             content: 'file1 content',
-            mtime: new Date(150)
+            mtime: new Date(150),
+            ctime: new Date(150)
           }),
           file2: mock.file({
             content: 'file2 content',
-            mtime: new Date(50)
+            mtime: new Date(50),
+            ctime: new Date(50)
           }),
           file3: mock.file({
             content: 'file3 content',
-            mtime: new Date(150)
+            mtime: new Date(150),
+            ctime: new Date(150)
           })
         }
       });
@@ -394,6 +447,27 @@ describe('newer()', function() {
 
       write(stream, paths);
     });
+
+    it('passes through one newer file, checking ctime', function(done) {
+      var stream = newer({dest: 'dest', ctime: true});
+
+      var paths = ['file1', 'file2', 'file3'];
+
+      var calls = 0;
+      stream.on('data', function(file) {
+        assert.equal(file.path, path.resolve('file2'));
+        ++calls;
+      });
+
+      stream.on('error', done);
+
+      stream.on('end', function() {
+        assert.equal(calls, 1);
+        done();
+      });
+
+      write(stream, paths);
+    });
   });
 
   describe('dest file with first source file newer', function() {
@@ -401,20 +475,24 @@ describe('newer()', function() {
       mock({
         file1: mock.file({
           content: 'file1 content',
-          mtime: new Date(200)
+          mtime: new Date(200),
+          ctime: new Date(200)
         }),
         file2: mock.file({
           content: 'file2 content',
-          mtime: new Date(100)
+          mtime: new Date(100),
+          ctime: new Date(100)
         }),
         file3: mock.file({
           content: 'file3 content',
-          mtime: new Date(100)
+          mtime: new Date(100),
+          ctime: new Date(100)
         }),
         dest: {
           output: mock.file({
             content: 'file2 content',
-            mtime: new Date(150)
+            mtime: new Date(150),
+            ctime: new Date(150)
           })
         }
       });
@@ -423,6 +501,27 @@ describe('newer()', function() {
 
     it('passes through all source files', function(done) {
       var stream = newer('dest/output');
+
+      var paths = ['file1', 'file2', 'file3'];
+
+      var calls = 0;
+      stream.on('data', function(file) {
+        assert.equal(file.path, path.resolve(paths[calls]));
+        ++calls;
+      });
+
+      stream.on('error', done);
+
+      stream.on('end', function() {
+        assert.equal(calls, paths.length);
+        done();
+      });
+
+      write(stream, paths);
+    });
+
+    it('passes through all source files, checking ctime', function(done) {
+      var stream = newer({dest: 'dest/output', ctime: true});
 
       var paths = ['file1', 'file2', 'file3'];
 
@@ -448,20 +547,24 @@ describe('newer()', function() {
       mock({
         file1: mock.file({
           content: 'file1 content',
-          mtime: new Date(100)
+          mtime: new Date(100),
+          ctime: new Date(100)
         }),
         file2: mock.file({
           content: 'file2 content',
-          mtime: new Date(200)
+          mtime: new Date(200),
+          ctime: new Date(200)
         }),
         file3: mock.file({
           content: 'file3 content',
-          mtime: new Date(100)
+          mtime: new Date(100),
+          ctime: new Date(100)
         }),
         dest: {
           output: mock.file({
             content: 'file2 content',
-            mtime: new Date(150)
+            mtime: new Date(150),
+            ctime: new Date(150)
           })
         }
       });
@@ -470,6 +573,27 @@ describe('newer()', function() {
 
     it('passes through all source files', function(done) {
       var stream = newer('dest/output');
+
+      var paths = ['file1', 'file2', 'file3'];
+
+      var calls = 0;
+      stream.on('data', function(file) {
+        assert.equal(file.path, path.resolve(paths[calls]));
+        ++calls;
+      });
+
+      stream.on('error', done);
+
+      stream.on('end', function() {
+        assert.equal(calls, paths.length);
+        done();
+      });
+
+      write(stream, paths);
+    });
+
+    it('passes through all source files, checking ctime', function(done) {
+      var stream = newer({dest: 'dest/output', ctime: true});
 
       var paths = ['file1', 'file2', 'file3'];
 
@@ -495,20 +619,24 @@ describe('newer()', function() {
       mock({
         file1: mock.file({
           content: 'file1 content',
-          mtime: new Date(100)
+          mtime: new Date(100),
+          ctime: new Date(100)
         }),
         file2: mock.file({
           content: 'file2 content',
-          mtime: new Date(100)
+          mtime: new Date(100),
+          ctime: new Date(100)
         }),
         file3: mock.file({
           content: 'file3 content',
-          mtime: new Date(200)
+          mtime: new Date(200),
+          ctime: new Date(200)
         }),
         dest: {
           output: mock.file({
             content: 'file2 content',
-            mtime: new Date(150)
+            mtime: new Date(150),
+            ctime: new Date(150)
           })
         }
       });
@@ -535,6 +663,27 @@ describe('newer()', function() {
 
       write(stream, paths);
     });
+
+    it('passes through all source files, checking ctime', function(done) {
+      var stream = newer({dest: 'dest/output', ctime: true});
+
+      var paths = ['file1', 'file2', 'file3'];
+
+      var calls = 0;
+      stream.on('data', function(file) {
+        assert.equal(file.path, path.resolve(paths[calls]));
+        ++calls;
+      });
+
+      stream.on('error', done);
+
+      stream.on('end', function() {
+        assert.equal(calls, paths.length);
+        done();
+      });
+
+      write(stream, paths);
+    });
   });
 
   describe('dest file with no newer source files', function() {
@@ -542,20 +691,24 @@ describe('newer()', function() {
       mock({
         file1: mock.file({
           content: 'file1 content',
-          mtime: new Date(100)
+          mtime: new Date(100),
+          ctime: new Date(100)
         }),
         file2: mock.file({
           content: 'file2 content',
-          mtime: new Date(100)
+          mtime: new Date(100),
+          ctime: new Date(100)
         }),
         file3: mock.file({
           content: 'file3 content',
-          mtime: new Date(100)
+          mtime: new Date(100),
+          ctime: new Date(100)
         }),
         dest: {
           output: mock.file({
             content: 'file2 content',
-            mtime: new Date(150)
+            mtime: new Date(150),
+            ctime: new Date(150)
           })
         }
       });
@@ -582,6 +735,27 @@ describe('newer()', function() {
 
       write(stream, paths);
     });
+
+    it('passes through no source files, checking ctime', function(done) {
+      var stream = newer({dest: 'dest/output', ctime: true});
+
+      var paths = ['file1', 'file2', 'file3'];
+
+      var calls = 0;
+      stream.on('data', function() {
+        done(new Error('Expected no source files'));
+        ++calls;
+      });
+
+      stream.on('error', done);
+
+      stream.on('end', function() {
+        assert.equal(calls, 0);
+        done();
+      });
+
+      write(stream, paths);
+    });
   });
 
   describe('dest file ext and two files', function() {
@@ -589,20 +763,24 @@ describe('newer()', function() {
       mock({
         'file1.ext1': mock.file({
           content: 'file1 content',
-          mtime: new Date(100)
+          mtime: new Date(100),
+          ctime: new Date(100)
         }),
         'file2.ext1': mock.file({
           content: 'file2 content',
-          mtime: new Date(100)
+          mtime: new Date(100),
+          ctime: new Date(100)
         }),
         dest: {
           'file1.ext2': mock.file({
             content: 'file1 content',
-            mtime: new Date(100)
+            mtime: new Date(100),
+            ctime: new Date(100)
           }),
           'file2.ext2': mock.file({
             content: 'file2 content',
-            mtime: new Date(50)
+            mtime: new Date(50),
+            ctime: new Date(50)
           })
         }
       });
@@ -629,6 +807,27 @@ describe('newer()', function() {
 
       write(stream, paths);
     });
+
+    it('passes through one newer file, checking ctime', function(done) {
+      var stream = newer({dest: 'dest', ext: '.ext2', ctime: true});
+
+      var paths = ['file1.ext1', 'file2.ext1'];
+
+      var calls = 0;
+      stream.on('data', function(file) {
+        assert.equal(file.path, path.resolve('file2.ext1'));
+        ++calls;
+      });
+
+      stream.on('error', done);
+
+      stream.on('end', function() {
+        assert.equal(calls, 1);
+        done();
+      });
+
+      write(stream, paths);
+    });
   });
 
   describe('custom mapping between source and dest', function() {
@@ -636,20 +835,24 @@ describe('newer()', function() {
       mock({
         'file1.ext1': mock.file({
           content: 'file1 content',
-          mtime: new Date(100)
+          mtime: new Date(100),
+          ctime: new Date(100)
         }),
         'file2.ext1': mock.file({
           content: 'file2 content',
-          mtime: new Date(100)
+          mtime: new Date(100),
+          ctime: new Date(100)
         }),
         dest: {
           'file1.ext2': mock.file({
             content: 'file1 content',
-            mtime: new Date(100)
+            mtime: new Date(100),
+            ctime: new Date(100)
           }),
           'file2.ext2': mock.file({
             content: 'file2 content',
-            mtime: new Date(50)
+            mtime: new Date(50),
+            ctime: new Date(50)
           })
         }
       });
@@ -662,6 +865,33 @@ describe('newer()', function() {
         map: function(destPath) {
           return destPath.replace('.ext1', '.ext2');
         }
+      });
+
+      var paths = ['file1.ext1', 'file2.ext1'];
+
+      var calls = 0;
+      stream.on('data', function(file) {
+        assert.equal(file.path, path.resolve('file2.ext1'));
+        ++calls;
+      });
+
+      stream.on('error', done);
+
+      stream.on('end', function() {
+        assert.equal(calls, 1);
+        done();
+      });
+
+      write(stream, paths);
+    });
+
+    it('passes through one newer file, checking ctime', function(done) {
+      var stream = newer({
+        dest: 'dest',
+        map: function(destPath) {
+          return destPath.replace('.ext1', '.ext2');
+        },
+        ctime: true
       });
 
       var paths = ['file1.ext1', 'file2.ext1'];

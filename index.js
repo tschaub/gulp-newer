@@ -70,6 +70,12 @@ function Newer(options) {
   this._map = options.map;
 
   /**
+   * Key for the timestamp in files' stats object
+   * @type {string}
+   */
+  this._timestamp = options.ctime ? 'ctime' : 'mtime';
+
+  /**
    * Promise for the dest file/directory stats.
    * @type {[type]}
    */
@@ -104,6 +110,7 @@ function Newer(options) {
 
   if (options.extra) {
     var extraFiles = [];
+    var timestamp = this._timestamp;
     for (var i = 0; i < options.extra.length; ++i) {
       extraFiles.push(Q.nfcall(glob, options.extra[i]));
     }
@@ -125,7 +132,7 @@ function Newer(options) {
         // We get all the file stats here; find the *latest* modification.
         var latestStat = resolvedStats[0];
         for (var j = 1; j < resolvedStats.length; ++j) {
-          if (resolvedStats[j].mtime > latestStat.mtime) {
+          if (resolvedStats[j][timestamp] > latestStat[timestamp]) {
             latestStat = resolvedStats[j];
           }
         }
@@ -194,10 +201,15 @@ Newer.prototype._transform = function(srcFile, encoding, done) {
       }
     })
     .spread(function(destFileStats, extraFileStats) {
-      var newer = !destFileStats || srcFile.stat.mtime > destFileStats.mtime;
+      var timestamp = self._timestamp;
+      var newer =
+        !destFileStats || srcFile.stat[timestamp] > destFileStats[timestamp];
       // If *any* extra file is newer than a destination file, then ALL
       // are newer.
-      if (extraFileStats && extraFileStats.mtime > destFileStats.mtime) {
+      if (
+        extraFileStats &&
+        extraFileStats[timestamp] > destFileStats[timestamp]
+      ) {
         newer = true;
       }
       if (self._all) {
