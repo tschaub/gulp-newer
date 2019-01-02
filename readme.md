@@ -71,11 +71,14 @@ gulp.task('concat', function() {
  * **options.ext** - `string` Source files will be matched to destination files with the provided extension (e.g. '.css').
  * **options.map** - `function` Map relative source paths to relative destination paths (e.g. `function(relativePath) { return relativePath + '.bak'; }`)
  * **options.extra** - `string` or `array` An extra file, file glob, or list of extra files and/or globs, to check for updated time stamp(s). If any of these files are newer than the destination files, then all source files will be passed into the stream.
+ * **options.ctime** - `boolean` Source files will be matched to destination files based on `ctime` rather than `mtime`.
 
 Create a [transform stream](http://nodejs.org/api/stream.html#stream_class_stream_transform_1) that passes through files whose modification time is more recent than the corresponding destination file's modification time.
 
 If `dest` is a directory path, the `newer` stream will check for files in the destination directory with the same relative path as source files.  Source files that have been modified more recently than the resolved destination file will be passed through.  If the `dest` directory or resolved destination file does not exist, all source files will be passed through.
 
 If `dest` is a file path, the `newer` stream will pass through *all* files if *any one* of them has been modified more recently than the destination file.  If the `dest` file does not exist, all source files will be passed through.
+
+By default, the `newer` stream will check files' *modification time*, or `mtime`, which updates when the file contents are changed. If `ctime` is `true`, files' *change time* will be checked instead, which updates when file contents or attributes like the file name or permissions have changed.
 
 [![Current Status](https://secure.travis-ci.org/tschaub/gulp-newer.png?branch=master)](https://travis-ci.org/tschaub/gulp-newer)
