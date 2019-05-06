@@ -31,7 +31,7 @@
     "chai": "^4.1.2",
     "eslint": "^4.14.0",
     "eslint-config-tschaub": "^10.0.0",
-    "gulp": "^3.9.1",
+    "gulp": "^4.0.2",
     "mocha": "^4.1.0",
     "mock-fs": "^4.4.2",
     "vinyl": "^2.1.0"
